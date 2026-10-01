@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning Targets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --maroon:#822336;
+  --maroon-deep:#5c1726;
+  --maroon-tint:#f3e6e9;
+  --ink:#1e1719;
+  --muted:#6d5f63;
+  --paper:#fcfafa;
+  --line:#e4d6da;
+  --font:"Google Sans Flex","Google Sans","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);overflow:hidden}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--maroon);outline-offset:2px}
+
+/* ---------- picker (no class chosen) ---------- */
+#picker{height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;gap:4vh;padding:4vh 4vw;background:var(--maroon);color:#fff}
+#picker.on{display:flex}
+#picker h1{font-size:clamp(28px,5vw,64px);font-weight:600;letter-spacing:-.01em}
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;width:min(1100px,100%)}
+.pick-grid button{background:#fff;color:var(--maroon);border:0;border-radius:14px;padding:5vh 24px;font-size:clamp(22px,2.6vw,36px);font-weight:600;text-align:left;line-height:1.15}
+.pick-grid button small{display:block;margin-top:8px;font-size:.5em;font-weight:400;color:var(--muted)}
+.pick-grid button:hover{background:var(--maroon-tint)}
+#picker .link{background:none;border:0;color:#fff;text-decoration:underline;font-size:18px;opacity:.85}
+
+/* ---------- display ---------- */
+#display{height:100%;display:none;flex-direction:column}
+#display.on{display:flex}
+
+header.bar{background:var(--maroon);color:#fff;display:flex;align-items:center;gap:2.2vw;padding:2.2vh 3vw}
+.logo{height:clamp(44px,8vh,84px);width:auto;flex:none;display:block}
+.logo-fallback{height:clamp(44px,8vh,84px);aspect-ratio:1;border-radius:12px;background:#fff;color:var(--maroon);display:grid;place-items:center;font-weight:700;font-size:clamp(28px,5vh,52px)}
+.bar-class{flex:1;min-width:0}
+.bar-class h1{font-size:clamp(26px,5.2vh,58px);font-weight:600;line-height:1.05;letter-spacing:-.01em}
+.bar-class p{font-size:clamp(15px,2.6vh,28px);opacity:.88;margin-top:.6vh}
+.bar-date{text-align:right;font-size:clamp(18px,3.4vh,38px);font-weight:500;line-height:1.15}
+.bar-date small{display:block;font-size:.6em;font-weight:400;opacity:.85;margin-top:.4vh}
+
+.periods{display:flex;gap:8px;justify-content:flex-end;margin-top:1vh}
+.periods button{border:2px solid rgba(255,255,255,.7);background:transparent;color:#fff;border-radius:999px;padding:3px 14px;font-size:clamp(13px,2vh,20px)}
+.periods button[aria-pressed="true"]{background:#fff;color:var(--maroon)}
+
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr)}
+.col-main{display:flex;flex-direction:column;min-height:0;padding:3.5vh 3vw 2vh 3vw;gap:3vh}
+.col-side{background:var(--maroon-tint);display:flex;flex-direction:column;min-height:0;padding:3.5vh 2.4vw 2vh;gap:3vh;border-left:1px solid var(--line)}
+
+h2.sec{font-size:clamp(15px,2.5vh,28px);font-weight:600;color:var(--maroon);margin-bottom:1.2vh}
+
+.target{flex:1.25;min-height:0;display:flex;flex-direction:column}
+.target-box{flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;border-left:.9vh solid var(--maroon);padding-left:2.2vw}
+.target-text{font-weight:600;line-height:1.14;letter-spacing:-.012em;text-wrap:balance;max-width:100%}
+
+.criteria{flex:1;min-height:0;display:flex;flex-direction:column}
+.fit-box{flex:1;min-height:0;overflow:hidden}
+ul.checks{list-style:none;padding:0}
+ul.checks li{display:flex;gap:.7em;align-items:flex-start;line-height:1.25;margin-bottom:.55em}
+ul.checks li::before{content:"";flex:none;width:.85em;height:.85em;margin-top:.17em;border:.12em solid var(--maroon);border-radius:.18em;background:#fff}
+ul.plain{list-style:none;padding:0}
+ul.plain li{line-height:1.25;margin-bottom:.5em;padding-left:.9em;position:relative}
+ul.plain li::before{content:"";position:absolute;left:0;top:.55em;width:.34em;height:.34em;border-radius:50%;background:var(--maroon)}
+
+.agenda{flex:1.2;min-height:0;display:flex;flex-direction:column}
+.vocab{flex:1;min-height:0;display:flex;flex-direction:column}
+.terms{display:flex;flex-wrap:wrap;gap:.45em .5em}
+.terms span{background:#fff;border:2px solid var(--maroon);color:var(--maroon-deep);border-radius:999px;padding:.12em .7em;font-weight:500}
+
+footer.foot{display:flex;align-items:center;gap:2vw;padding:1.4vh 3vw;border-top:1px solid var(--line);color:var(--muted);font-size:clamp(13px,2vh,22px);min-height:5vh}
+footer.foot .std{flex:1;min-width:0}
+footer.foot .status{white-space:nowrap}
+#spacer{width:min(430px,34vw);flex:none}
+
+.empty{flex:1;display:grid;place-items:center;text-align:center;padding:4vw}
+.empty h2{font-size:clamp(28px,5vh,56px);font-weight:600;color:var(--maroon);margin-bottom:2vh}
+.empty p{font-size:clamp(16px,2.6vh,28px);color:var(--muted);max-width:34em;margin:0 auto 3vh}
+.empty button{background:var(--maroon);color:#fff;border:0;border-radius:10px;padding:1.4vh 2vw;font-size:clamp(16px,2.4vh,26px)}
+
+/* ---------- controls ---------- */
+#ui{position:fixed;right:16px;bottom:12px;display:flex;gap:6px;align-items:center;background:rgba(30,23,25,.92);padding:6px;border-radius:14px;transition:opacity .25s;z-index:5}
+#ui.hide{opacity:0;pointer-events:none}
+#ui button,#ui select{background:transparent;color:#fff;border:0;border-radius:9px;padding:8px 11px;font-size:15px}
+#ui select{background:#3a2e32;padding:8px 8px}
+#ui button:hover{background:rgba(255,255,255,.16)}
+#ui .sep{width:1px;height:22px;background:rgba(255,255,255,.25)}
+
+dialog{border:0;border-radius:16px;padding:0;width:min(600px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.35);font-family:var(--font);color:var(--ink)}
+dialog::backdrop{background:rgba(30,23,25,.55)}
+dialog form{padding:26px 28px;display:flex;flex-direction:column;gap:14px}
+dialog h3{font-size:22px;color:var(--maroon)}
+dialog label{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:15px}
+dialog input[type=text],dialog textarea{font:inherit;padding:10px 12px;border:2px solid var(--line);border-radius:9px;font-weight:400}
+dialog textarea{min-height:90px;resize:vertical}
+dialog .hint{font-size:13px;color:var(--muted);font-weight:400}
+dialog .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+dialog .row button{padding:10px 18px;border-radius:9px;border:2px solid var(--maroon);background:#fff;color:var(--maroon);font-weight:500}
+dialog .row button.primary{background:var(--maroon);color:#fff}
+
+@media (max-width:820px){
+  body{overflow:auto}
+  main{grid-template-columns:1fr}
+  .col-side{border-left:0}
+  header.bar{flex-wrap:wrap}
+  #spacer{display:none}
+}
+@media (prefers-reduced-motion:reduce){#ui{transition:none}}
+</style>
+</head>
+<body>
+
+<!-- Class picker -->
+<section id="picker" aria-label="Choose a class">
+  <h1>Which class is this screen for?</h1>
+  <div class="pick-grid" id="pickGrid"></div>
+  <button class="link" id="pickSettings">Sheet settings</button>
+</section>
+
+<!-- Display -->
+<section id="display" aria-live="polite">
+  <header class="bar">
+    <div id="logoSlot"></div>
+    <div class="bar-class">
+      <h1 id="hClass"></h1>
+      <p id="hUnit"></p>
+    </div>
+    <div class="bar-date">
+      <div id="hDate"></div>
+      <div class="periods" id="periods"></div>
+    </div>
+  </header>
+  <main id="mainArea"></main>
+  <footer class="foot">
+    <div class="std" id="fStd"></div>
+    <div class="status" id="fStatus"></div>
+    <div id="spacer"></div>
+  </footer>
+</section>
+
+<!-- Controls -->
+<nav id="ui" aria-label="Display controls">
+  <select id="uiClass" aria-label="Class"></select>
+  <span class="sep"></span>
+  <button id="uiPrev" title="Previous posted day (←)">◀ Prev</button>
+  <button id="uiToday" title="Jump to today (T)">Today</button>
+  <button id="uiNext" title="Next posted day (→)">Next ▶</button>
+  <span class="sep"></span>
+  <button id="uiRefresh" title="Reload the sheet (R)">Refresh</button>
+  <button id="uiSettings" title="Sheet settings (S)">Settings</button>
+  <button id="uiFull" title="Full screen (F)">Full screen</button>
+</nav>
+
+<!-- Settings -->
+<dialog id="dlg">
+  <form method="dialog" id="dlgForm">
+    <h3>Sheet settings</h3>
+    <label>Published Google Sheet CSV link
+      <input type="text" id="sUrl" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
+      <span class="hint">In Google Sheets: File → Share → Publish to web → choose the tab → CSV → Publish. Paste that link here.</span>
+    </label>
+    <label>Or load a CSV file from this computer
+      <input type="file" id="sFile" accept=".csv,text/csv">
+    </label>
+    <label>Or paste CSV text
+      <textarea id="sPaste" placeholder="Date,Class,Period,Unit,Learning Target,..."></textarea>
+    </label>
+    <div class="row">
+      <button type="button" id="sDemo">Use demo data</button>
+      <button type="button" id="sCancel">Close</button>
+      <button type="button" class="primary" id="sSave">Save and load</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* =====================================================================
+   SETTINGS YOU MAY WANT TO EDIT
+   ===================================================================== */
+const CONFIG = {
+  // Paste your published-sheet CSV link here to make it permanent for everyone
+  // who opens this file. (You can also set it from the Settings button.)
+  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrZNdVL7fkYpz01LTWllFm2J2qOMtlDhMgTULE-ilEDaTWbofSSOoAT4tQlmjjv9N6mqY8sgTDOMAM/pub?gid=48683423&single=true&output=csv",
+
+  REFRESH_MINUTES: 5,
+
+  // code = what you type in the Class column and in ?class=CODE
+  CLASSES: [
+    { code: "GA1", name: "Graphic Art 1",     detail: "Photoshop and Illustrator" },
+    { code: "GA2", name: "Graphic Art 2",     detail: "Client projects for the printshop" },
+    { code: "DA1", name: "Digital Art 1",     detail: "Adobe Fresco and Illustrator" },
+    { code: "FS",  name: "Freshman Success",  detail: "SEL and touch typing" }
+  ],
+
+  // Paste your school T-mark SVG markup between the backticks.
+  // Leave empty to show a simple maroon-and-white "T" placeholder.
+  LOGO_SVG: ``
+};
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const LS = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const params = new URLSearchParams(location.search);
+
+const state = { rows: [], classCode: null, date: null, periodIdx: 0, mode: "demo", updated: null, timer: null };
+
+function pad(n){ return String(n).padStart(2,"0"); }
+function isoFromDate(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function dateFromIso(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
+function todayIso(){ return params.get("date") || isoFromDate(new Date()); }
+
+function parseDate(v){
+  v = (v||"").trim();
+  if(!v) return null;
+  let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return m[1]+"-"+pad(+m[2])+"-"+pad(+m[3]);
+  m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if(m){ let y=+m[3]; if(y<100) y+=2000; return y+"-"+pad(+m[1])+"-"+pad(+m[2]); }
+  const d = new Date(v);
+  return isNaN(d) ? null : isoFromDate(d);
+}
+
+function parseCSV(text){
+  const rows=[]; let row=[], cur="", q=false;
+  text = text.replace(/^\uFEFF/,"");
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){ cur+='"'; i++; } else q=false; }
+      else cur+=c;
+    } else if(c==='"') q=true;
+    else if(c===","){ row.push(cur); cur=""; }
+    else if(c==="\n"||c==="\r"){
+      if(c==="\r"&&text[i+1]==="\n") i++;
+      row.push(cur); cur="";
+      if(row.some(x=>x.trim()!=="")) rows.push(row);
+      row=[];
+    } else cur+=c;
+  }
+  row.push(cur);
+  if(row.some(x=>x.trim()!=="")) rows.push(row);
+  return rows;
+}
+
+const FIELD_MAP = {
+  date:"date", class:"class", period:"period", unit:"unit",
+  learningtarget:"target", target:"target", objective:"target",
+  successcriteria:"criteria", criteria:"criteria",
+  standard:"standard", standards:"standard",
+  vocabulary:"vocab", vocab:"vocab", agenda:"agenda"
+};
+
+function rowsFromCSV(text){
+  const t = parseCSV(text);
+  if(t.length<2) return [];
+  const keys = t[0].map(h => FIELD_MAP[h.toLowerCase().replace(/[^a-z]/g,"")] || null);
+  const out=[];
+  for(const r of t.slice(1)){
+    const o={};
+    keys.forEach((k,i)=>{ if(k) o[k]=(r[i]||"").trim(); });
+    o.iso = parseDate(o.date);
+    if(o.iso && o.class) out.push(o);
+  }
+  return out;
+}
+
+function splitList(s, extraSeps){
+  const re = extraSeps ? /\n|\||,|;/ : /\n|\|/;
+  return (s||"").split(re).map(x=>x.replace(/^[\s\-•*]+/,"").trim()).filter(Boolean);
+}
+
+function classMatches(rowClass, cls){
+  const r = rowClass.trim().toLowerCase();
+  return r===cls.code.toLowerCase() || r===cls.name.toLowerCase();
+}
+function classByCode(code){ return CONFIG.CLASSES.find(c=>c.code.toLowerCase()===(code||"").toLowerCase()); }
+function rowsForClass(cls){ return state.rows.filter(r=>classMatches(r.class,cls)); }
+function datesForClass(cls){ return [...new Set(rowsForClass(cls).map(r=>r.iso))].sort(); }
+
+/* =====================================================================
+   DATA LOADING
+   ===================================================================== */
+function demoCSV(){
+  const t = todayIso();
+  const q = s => '"'+s.replace(/"/g,'""')+'"';
+  const rows = [
+    ["GA1","1","Photoshop basics","I can use the Move, Marquee, and Lasso tools to select and move part of an image.","I can name the three selection tools\nI can make a selection and move it to a new layer\nI can undo a mistake with History","ACPro: Selections","layer\nselection\nmarquee\nlasso","Do Now: tool name match\nDemo: three selection tools\nPractice: cut out a shape\nExit check: save to your folder"],
+    ["GA2","3","Printshop client projects","I can prepare a print-ready file that meets my client's size, bleed, and color requirements.","I can set up the document at the right size with bleed\nI can convert my images to CMYK\nI can export a press-ready PDF","Client brief checklist","bleed\nCMYK\ncrop marks\nproof","Client check-in\nBuild and review layout\nPreflight in InDesign\nExport and submit proof"],
+    ["DA1","2","Drawing in Fresco","I can use layers and brushes in Adobe Fresco to build a simple drawing.","I can add and name at least three layers\nI can pick a brush that fits my goal\nI can save my work in the right place","Digital art: tools and process","layer\nbrush\nopacity","Sketch warm-up\nBrush tour\nWork time\nShare out"],
+    ["FS","4","Typing and SEL","I can type with correct finger placement and stay focused on my goals for the week.","I can find the home row without looking\nI can reach a typing goal I set\nI can name one focus strategy","SEL: self-management","home row\nposture\ngoal","Goal check-in\nTyping practice\nReflection"]
+  ];
+  return "Date,Class,Period,Unit,Learning Target,Success Criteria,Standard,Vocabulary,Agenda\n" +
+    rows.map(r=>[t,r[0],r[1],r[2],q(r[3]),q(r[4]),r[5],q(r[6]),q(r[7])].map(x=>x.includes(",")&&!x.startsWith('"')?q(x):x).join(",")).join("\n");
+}
+
+async function fetchSheet(url){
+  const sep = url.includes("?") ? "&" : "?";
+  const res = await fetch(url + sep + "_=" + Date.now(), { cache:"no-store" });
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const text = await res.text();
+  if(/^\s*<(!doctype|html)/i.test(text)) throw new Error("Not a CSV (is the sheet published?)");
+  return text;
+}
+
+async function loadData(){
+  const url = params.get("sheet") || LS.get("lt_url") || CONFIG.SHEET_CSV_URL;
+  if(url){
+    try{
+      const text = await fetchSheet(url);
+      state.rows = rowsFromCSV(text);
+      state.mode = "live"; state.updated = new Date();
+      LS.set("lt_cache", text); LS.set("lt_cache_time", String(Date.now()));
+      return;
+    }catch(e){
+      const cached = LS.get("lt_cache");
+      if(cached){
+        state.rows = rowsFromCSV(cached);
+        state.mode = "cached";
+        state.updated = new Date(+LS.get("lt_cache_time")||Date.now());
+        return;
+      }
+      state.mode = "error"; state.error = e.message;
+    }
+  } else {
+    const cached = LS.get("lt_file");
+    if(cached){ state.rows = rowsFromCSV(cached); state.mode = "file"; state.updated = new Date(+LS.get("lt_file_time")||Date.now()); return; }
+  }
+  state.rows = rowsFromCSV(demoCSV());
+  if(state.mode!=="error") state.mode = "demo";
+}
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+function el(tag, cls, text){
+  const e=document.createElement(tag);
+  if(cls) e.className=cls;
+  if(text!=null) e.textContent=text;
+  return e;
+}
+function section(title, cls){
+  const s=el("section", cls);
+  s.appendChild(el("h2","sec",title));
+  return s;
+}
+
+function fmtLong(iso){
+  return dateFromIso(iso).toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+}
+function fmtTime(d){ return d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); }
+function fmtShort(d){ return d.toLocaleDateString("en-US",{month:"numeric",day:"numeric"}); }
+
+function statusText(){
+  const u = state.updated;
+  switch(state.mode){
+    case "live":   return "Live from your sheet · updated "+fmtTime(u);
+    case "cached": return "Offline copy from "+fmtShort(u)+" "+fmtTime(u);
+    case "file":   return "Loaded from file · "+fmtShort(u);
+    case "error":  return "Couldn't reach the sheet ("+state.error+"). Showing demo data.";
+    default:       return "Demo data. Open Settings to connect your sheet.";
+  }
+}
+
+function render(){
+  const cls = classByCode(state.classCode);
+  $("picker").classList.toggle("on", !cls);
+  $("display").classList.toggle("on", !!cls);
+  if(!cls){ buildPicker(); return; }
+
+  const all = rowsForClass(cls);
+  const dayRows = all.filter(r=>r.iso===state.date).sort((a,b)=>(a.period||"").localeCompare(b.period||"",undefined,{numeric:true}));
+  if(state.periodIdx>=dayRows.length) state.periodIdx=0;
+  const row = dayRows[state.periodIdx];
+
+  $("hClass").textContent = cls.name;
+  $("hUnit").textContent = row && row.unit ? row.unit : cls.detail;
+  $("hDate").innerHTML = "";
+  $("hDate").append(fmtLong(state.date));
+  if(state.date!==isoFromDate(new Date()) && !params.get("date")){
+    const s=el("small","", state.date>isoFromDate(new Date())?"Upcoming day":"Past day");
+    $("hDate").appendChild(s);
+  }
+
+  const per = $("periods"); per.innerHTML="";
+  if(dayRows.length>1){
+    dayRows.forEach((r,i)=>{
+      const b=el("button","", r.period ? "Period "+r.period : "Section "+(i+1));
+      b.setAttribute("aria-pressed", i===state.periodIdx);
+      b.onclick=()=>{ state.periodIdx=i; render(); };
+      per.appendChild(b);
+    });
+  }
+
+  const main=$("mainArea"); main.innerHTML="";
+  if(!row){
+    const dates = datesForClass(cls);
+    const next = dates.find(d=>d>state.date) || dates.slice().reverse().find(d=>d<state.date);
+    const wrap=el("div","empty");
+    const box=el("div");
+    box.appendChild(el("h2","","Nothing posted for "+fmtLong(state.date)));
+    box.appendChild(el("p","", dates.length
+      ? "Add a row for "+cls.code+" on this date in your sheet, then press Refresh."
+      : "No rows were found for "+cls.code+". Check that the Class column says \""+cls.code+"\" or \""+cls.name+"\"."));
+    if(next){
+      const b=el("button","","Go to "+fmtLong(next));
+      b.onclick=()=>{ state.date=next; state.periodIdx=0; render(); };
+      box.appendChild(b);
+    }
+    wrap.appendChild(box);
+    main.style.display="block"; main.appendChild(wrap);
+    $("fStd").textContent="";
+  } else {
+    main.style.display="";
+    const left=el("div","col-main"), right=el("div","col-side");
+
+    const tgt=section("Learning target","target");
+    const tbox=el("div","target-box");
+    tbox.appendChild(el("p","target-text", row.target || "(No learning target entered)"));
+    tgt.appendChild(tbox); left.appendChild(tgt);
+
+    const crit=splitList(row.criteria);
+    if(crit.length){
+      const c=section("Success criteria","criteria");
+      const fb=el("div","fit-box"); const ul=el("ul","checks");
+      crit.forEach(x=>ul.appendChild(el("li","",x)));
+      fb.appendChild(ul); c.appendChild(fb); left.appendChild(c);
+    }
+
+    const ag=splitList(row.agenda);
+    if(ag.length){
+      const a=section("Today","agenda");
+      const fb=el("div","fit-box"); const ul=el("ul","plain");
+      ag.forEach(x=>ul.appendChild(el("li","",x)));
+      fb.appendChild(ul); a.appendChild(fb); right.appendChild(a);
+    }
+    const vo=splitList(row.vocab,true);
+    if(vo.length){
+      const v=section("Vocabulary","vocab");
+      const fb=el("div","fit-box"); const t=el("div","terms");
+      vo.forEach(x=>t.appendChild(el("span","",x)));
+      fb.appendChild(t); v.appendChild(fb); right.appendChild(v);
+    }
+    main.appendChild(left);
+    if(right.children.length) main.appendChild(right); else main.style.gridTemplateColumns="1fr";
+    $("fStd").textContent = row.standard ? "Standard: "+row.standard : "";
+  }
+  $("fStatus").textContent = statusText();
+  document.title = cls.name+" · Learning Target";
+  syncUI();
+  requestAnimationFrame(fitAll);
+}
+
+/* Shrink text until it fits its box so long targets never get cut off */
+function fitText(textEl, box, maxPx, minPx){
+  let s=maxPx; textEl.style.fontSize=s+"px";
+  while(s>minPx && (textEl.offsetHeight>box.clientHeight || textEl.scrollWidth>box.clientWidth+1)){
+    s-=2; textEl.style.fontSize=s+"px";
+  }
+}
+function fitAll(){
+  const vh=innerHeight, vw=innerWidth;
+  const tt=document.querySelector(".target-text"), tb=document.querySelector(".target-box");
+  if(tt&&tb) fitText(tt, tb, Math.min(vh*0.15, vw*0.075), 22);
+  document.querySelectorAll(".fit-box").forEach(fb=>{
+    const inner=fb.firstElementChild;
+    const isCrit = fb.closest(".criteria");
+    const max = isCrit ? Math.min(vh*0.05, vw*0.028) : Math.min(vh*0.042, vw*0.024);
+    fitText(inner, fb, max, 15);
+  });
+}
+addEventListener("resize", fitAll);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+
+function buildPicker(){
+  const g=$("pickGrid"); g.innerHTML="";
+  CONFIG.CLASSES.forEach(c=>{
+    const b=el("button","",c.name);
+    b.appendChild(el("small","",c.detail));
+    b.onclick=()=>chooseClass(c.code);
+    g.appendChild(b);
+  });
+}
+
+/* =====================================================================
+   NAVIGATION / ACTIONS
+   ===================================================================== */
+function chooseClass(code){
+  state.classCode=code; LS.set("lt_class",code);
+  state.date=todayIso(); state.periodIdx=0;
+  const u=new URL(location.href); u.searchParams.set("class",code);
+  history.replaceState(null,"",u);
+  render();
+}
+function step(dir){
+  const cls=classByCode(state.classCode); if(!cls) return;
+  const dates=datesForClass(cls);
+  const t = dir>0 ? dates.find(d=>d>state.date) : dates.slice().reverse().find(d=>d<state.date);
+  if(t){ state.date=t; state.periodIdx=0; render(); }
+}
+function goToday(){ state.date=todayIso(); state.periodIdx=0; render(); }
+async function refresh(){
+  $("uiRefresh").textContent="Loading…";
+  await loadData();
+  $("uiRefresh").textContent="Refresh";
+  render();
+}
+function toggleFull(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});
+}
+
+/* =====================================================================
+   CONTROLS
+   ===================================================================== */
+function syncUI(){
+  const sel=$("uiClass");
+  if(!sel.options.length){
+    CONFIG.CLASSES.forEach(c=>sel.add(new Option(c.name,c.code)));
+    sel.onchange=()=>chooseClass(sel.value);
+  }
+  if(state.classCode) sel.value=classByCode(state.classCode).code;
+  $("uiFull").textContent = document.fullscreenElement ? "Exit full screen" : "Full screen";
+}
+let hideTimer;
+function showUI(){
+  $("ui").classList.remove("hide");
+  clearTimeout(hideTimer);
+  if(document.fullscreenElement && !$("dlg").open){
+    hideTimer=setTimeout(()=>$("ui").classList.add("hide"),3500);
+  }
+}
+["mousemove","mousedown","touchstart"].forEach(ev=>addEventListener(ev,showUI,{passive:true}));
+document.addEventListener("fullscreenchange",()=>{ syncUI(); showUI(); setTimeout(fitAll,150); });
+
+$("uiPrev").onclick=()=>step(-1);
+$("uiNext").onclick=()=>step(1);
+$("uiToday").onclick=goToday;
+$("uiRefresh").onclick=refresh;
+$("uiFull").onclick=toggleFull;
+$("uiSettings").onclick=openSettings;
+$("pickSettings").onclick=openSettings;
+
+addEventListener("keydown",e=>{
+  if($("dlg").open || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  const k=e.key.toLowerCase();
+  if(k==="arrowright"||k==="pagedown"){ step(1); e.preventDefault(); }
+  else if(k==="arrowleft"||k==="pageup"){ step(-1); e.preventDefault(); }
+  else if(k==="f"){ toggleFull(); }
+  else if(k==="t"){ goToday(); }
+  else if(k==="r"){ refresh(); }
+  else if(k==="s"){ openSettings(); }
+  showUI();
+});
+
+/* ---- settings dialog ---- */
+function openSettings(){
+  $("sUrl").value = LS.get("lt_url") || CONFIG.SHEET_CSV_URL || "";
+  $("sPaste").value=""; $("sFile").value="";
+  $("dlg").showModal();
+}
+$("sCancel").onclick=()=>$("dlg").close();
+$("sDemo").onclick=async()=>{
+  LS.del("lt_url"); LS.del("lt_cache"); LS.del("lt_file");
+  state.mode="demo"; await loadData(); $("dlg").close(); render();
+};
+$("sSave").onclick=async()=>{
+  const url=$("sUrl").value.trim(), pasted=$("sPaste").value.trim(), file=$("sFile").files[0];
+  if(file){
+    const text=await file.text();
+    LS.set("lt_file",text); LS.set("lt_file_time",String(Date.now())); LS.del("lt_url");
+  } else if(pasted){
+    LS.set("lt_file",pasted); LS.set("lt_file_time",String(Date.now())); LS.del("lt_url");
+  } else if(url){
+    LS.set("lt_url",url);
+  } else { LS.del("lt_url"); }
+  await loadData(); $("dlg").close(); render();
+};
+
+/* =====================================================================
+   START
+   ===================================================================== */
+function setLogo(){
+  const slot=$("logoSlot");
+  if(CONFIG.LOGO_SVG.trim()){
+    slot.innerHTML=CONFIG.LOGO_SVG;
+    const svg=slot.querySelector("svg"); if(svg) svg.classList.add("logo");
+  } else {
+    slot.appendChild(el("div","logo-fallback","T"));
+  }
+}
+
+(async function init(){
+  setLogo();
+  await loadData();
+  const wanted = params.get("class") || LS.get("lt_class");
+  const cls = classByCode(wanted);
+  state.classCode = cls ? cls.code : null;
+  state.date = todayIso();
+  render();
+  setInterval(async()=>{ if(state.mode==="live"||state.mode==="cached"){ await loadData(); render(); } }, CONFIG.REFRESH_MINUTES*60000);
+  showUI();
+})();
+</script>
+</body>
+</html>
