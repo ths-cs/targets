@@ -65,7 +65,7 @@ body.fs #board nav.tabstrip{display:none}
 #board .target-text{font-weight:600;line-height:1.14;letter-spacing:-.012em;text-wrap:balance;max-width:100%}
 #board .spot{flex:none;background:var(--maroon);color:#fff;border-radius:1.4vh;padding:1.6vh 1.8vw}
 #board .spot h2{font-size:clamp(13px,2vh,22px);font-weight:600;opacity:.85;margin-bottom:.6vh;color:#fff}
-#board .spot-body{max-height:20vh;overflow:hidden}
+#board .spot-body{max-height:16vh;overflow:hidden}
 #board .spot-body p{font-weight:600;line-height:1.2;margin-bottom:.3em}
 #board .criteria,#board .agenda,#board .vocab{min-height:0;display:flex;flex-direction:column}
 #board .criteria{flex:1}
@@ -571,13 +571,20 @@ function fitText(textEl,box,maxPx,minPx){
 function fitAll(){
   if(state.view!=="teacher") return;
   const vh=innerHeight, vw=innerWidth;
+
+  // 1) Spotlight first, so the target is fitted to the space that is really left
+  document.querySelectorAll("#board .spot-body").forEach(sb=>{
+    const ps=[...sb.children]; let size=Math.min(vh*0.04,vw*0.024);
+    const set=v=>ps.forEach(p=>p.style.fontSize=v+"px");
+    set(size);
+    while(size>16 && sb.scrollHeight>sb.clientHeight+1){ size-=2; set(size); }
+  });
+
+  // 2) Learning target
   const tt=document.querySelector("#board .target-text"), tb=document.querySelector("#board .target-box");
   if(tt&&tb) fitText(tt,tb,Math.min(vh*0.15,vw*0.075),22);
-  document.querySelectorAll("#board .spot-body").forEach(sb=>{
-    const ps=[...sb.children]; let size=Math.min(vh*0.045,vw*0.026);
-    const set=v=>ps.forEach(p=>p.style.fontSize=v+"px");
-    set(size); while(size>16 && sb.scrollHeight>sb.clientHeight+1){ size-=2; set(size); }
-  });
+
+  // 3) Success criteria, agenda, vocabulary
   document.querySelectorAll("#board .fit-box").forEach(fb=>{
     const crit=fb.closest(".criteria");
     fitText(fb.firstElementChild,fb,crit?Math.min(vh*0.05,vw*0.028):Math.min(vh*0.042,vw*0.024),15);
