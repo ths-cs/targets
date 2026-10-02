@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning Targets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --maroon:#822336;
+  --maroon-deep:#5c1726;
+  --maroon-tint:#f3e6e9;
+  --ink:#1e1719;
+  --muted:#6d5f63;
+  --paper:#fcfafa;
+  --line:#e4d6da;
+  --font:"Google Sans Flex","Google Sans","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{min-height:100%}
+body{font-family:var(--font);background:var(--paper);color:var(--ink)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--maroon);outline-offset:2px}
+.logo{height:100%;width:auto;display:block}
+.logo-fallback{height:100%;aspect-ratio:1;border-radius:12px;background:#fff;color:var(--maroon);display:grid;place-items:center;font-weight:700}
+
+/* Only one view shows at a time */
+#picker,#board,#student{display:none}
+body.picker #picker{display:flex}
+body.teacher #board{display:flex}
+body.student #student{display:flex}
+body.teacher{overflow:hidden}
+
+/* =================== PICKER =================== */
+#picker{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;gap:4vh;padding:4vh 4vw;background:var(--maroon);color:#fff}
+#picker h1{font-size:clamp(28px,5vw,60px);font-weight:600;letter-spacing:-.01em;text-align:center}
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;width:min(1000px,100%)}
+.pick-grid button{background:#fff;color:var(--maroon);border:0;border-radius:14px;padding:5vh 24px;font-size:clamp(22px,2.6vw,34px);font-weight:600;text-align:left}
+.pick-grid button:hover{background:var(--maroon-tint)}
+
+/* =================== TEACHER BOARD =================== */
+#board{height:100vh;flex-direction:column}
+#board header.bar{background:var(--maroon);color:#fff;display:flex;align-items:center;gap:2.2vw;padding:2.2vh 3vw}
+#board .logobox{height:clamp(44px,8vh,84px);flex:none}
+#board .logo-fallback{font-size:clamp(28px,5vh,52px)}
+#board .bar-class{flex:1;min-width:0}
+#board .bar-class h1{font-size:clamp(26px,5.2vh,58px);font-weight:600;line-height:1.05;letter-spacing:-.01em}
+#board .bar-class p{font-size:clamp(15px,2.6vh,28px);opacity:.88;margin-top:.6vh}
+#board .bar-date{text-align:right;font-size:clamp(18px,3.4vh,38px);font-weight:500;line-height:1.15}
+#board .bar-date small{display:block;font-size:.6em;font-weight:400;opacity:.85;margin-top:.4vh}
+
+#board nav.tabstrip{background:var(--maroon-deep);display:flex;gap:6px;padding:6px 3vw 0;overflow-x:auto}
+body.fs #board nav.tabstrip{display:none}
+#board nav.tabstrip button{background:transparent;color:#fff;border:0;border-radius:10px 10px 0 0;padding:10px 18px;font-size:clamp(15px,2.2vh,20px);font-weight:500;white-space:nowrap;opacity:.82;display:flex;align-items:center;gap:10px}
+#board nav.tabstrip button:hover{opacity:1}
+#board nav.tabstrip button[aria-selected="true"]{background:var(--paper);color:var(--maroon);opacity:1;font-weight:600}
+.pn{display:inline-grid;place-items:center;min-width:1.65em;height:1.65em;padding:0 .3em;border:2px solid currentColor;border-radius:999px;font-size:.82em;font-weight:600}
+
+#board main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr)}
+#board .col-main{display:flex;flex-direction:column;min-height:0;padding:3.5vh 3vw 2vh;gap:3vh}
+#board .col-side{background:var(--maroon-tint);display:flex;flex-direction:column;min-height:0;padding:3.5vh 2.4vw 2vh;gap:3vh;border-left:1px solid var(--line)}
+#board h2.sec{font-size:clamp(15px,2.5vh,28px);font-weight:600;color:var(--maroon);margin-bottom:1.2vh}
+#board .target{flex:1.25;min-height:0;display:flex;flex-direction:column}
+#board .target-box{flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;border-left:.9vh solid var(--maroon);padding-left:2.2vw}
+#board .target-text{font-weight:600;line-height:1.14;letter-spacing:-.012em;text-wrap:balance;max-width:100%}
+#board .criteria,#board .agenda,#board .vocab{min-height:0;display:flex;flex-direction:column}
+#board .criteria{flex:1}
+#board .agenda{flex:1.2}
+#board .vocab{flex:1}
+#board .fit-box{flex:1;min-height:0;overflow:hidden}
+#board ul.checks{list-style:none;padding:0}
+#board ul.checks li{display:flex;gap:.7em;align-items:flex-start;line-height:1.25;margin-bottom:.55em}
+#board ul.checks li::before{content:"";flex:none;width:.85em;height:.85em;margin-top:.17em;border:.12em solid var(--maroon);border-radius:.18em;background:#fff}
+#board ul.plain{list-style:none;padding:0}
+#board ul.plain li{line-height:1.25;margin-bottom:.5em;padding-left:.9em;position:relative}
+#board ul.plain li::before{content:"";position:absolute;left:0;top:.55em;width:.34em;height:.34em;border-radius:50%;background:var(--maroon)}
+#board .terms{display:flex;flex-wrap:wrap;gap:.45em .5em}
+#board .terms span{background:#fff;border:2px solid var(--maroon);color:var(--maroon-deep);border-radius:999px;padding:.12em .7em;font-weight:500}
+#board footer.foot{display:flex;align-items:center;gap:2vw;padding:1.4vh 3vw;border-top:1px solid var(--line);color:var(--muted);font-size:clamp(13px,2vh,22px);min-height:5vh}
+#board footer.foot .std{flex:1;min-width:0}
+#board footer.foot .status{white-space:nowrap}
+#board .spacer{width:min(560px,40vw);flex:none}
+#board .empty{flex:1;display:grid;place-items:center;text-align:center;padding:4vw}
+#board .empty h2{font-size:clamp(28px,5vh,56px);font-weight:600;color:var(--maroon);margin-bottom:2vh}
+#board .empty p{font-size:clamp(16px,2.6vh,28px);color:var(--muted);max-width:34em;margin:0 auto 3vh}
+#board .empty button{background:var(--maroon);color:#fff;border:0;border-radius:10px;padding:1.4vh 2vw;font-size:clamp(16px,2.4vh,26px)}
+
+#ui{display:none;position:fixed;right:16px;bottom:12px;gap:6px;align-items:center;background:rgba(30,23,25,.92);padding:6px;border-radius:14px;transition:opacity .25s;z-index:5}
+body.teacher #ui{display:flex}
+#ui.hide{opacity:0;pointer-events:none}
+#ui button,#ui select{background:transparent;color:#fff;border:0;border-radius:9px;padding:8px 11px;font-size:15px}
+#ui select{background:#3a2e32;padding:8px;max-width:230px}
+#ui button:hover{background:rgba(255,255,255,.16)}
+#ui .sep{width:1px;height:22px;background:rgba(255,255,255,.25)}
+
+/* =================== STUDENT VIEW =================== */
+#student{min-height:100vh;flex-direction:column;font-size:18px;line-height:1.4}
+#student header.top{background:var(--maroon);color:#fff;display:flex;align-items:center;gap:16px;padding:14px max(16px,4vw)}
+#student .logobox{height:52px;flex:none}
+#student .logo-fallback{font-size:28px}
+#student header.top h1{font-size:clamp(22px,3.6vw,34px);font-weight:600;line-height:1.1}
+#student header.top p{font-size:15px;opacity:.88;margin-top:2px}
+#student .wrap{width:min(1100px,100%);margin:0 auto;padding:22px max(16px,4vw) 40px;flex:1}
+#student .daybar{display:flex;gap:8px;align-items:center;overflow-x:auto;padding-bottom:10px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+#student .daybar button{flex:none;border:2px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:7px 14px;font-size:16px}
+#student .daybar button[aria-pressed="true"]{background:var(--maroon);border-color:var(--maroon);color:#fff;font-weight:600}
+#student .daybar button.today:not([aria-pressed="true"]){border-color:var(--maroon);color:var(--maroon);font-weight:600}
+#student .daybar .gap{flex:none;width:1px;height:26px;background:var(--line)}
+#student .periods{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+#student .periods span{color:var(--muted);font-size:16px}
+#student .periods button{border:2px solid var(--maroon);background:#fff;color:var(--maroon);border-radius:999px;padding:6px 16px;font-size:16px}
+#student .periods button[aria-pressed="true"]{background:var(--maroon);color:#fff}
+#student .meta{color:var(--muted);font-size:17px;margin-bottom:6px}
+#student h2.sec{font-size:clamp(17px,2.2vw,21px);font-weight:600;color:var(--maroon);margin-bottom:10px}
+#student .target{margin:6px 0 26px;border-left:8px solid var(--maroon);padding:4px 0 4px clamp(14px,2.4vw,28px)}
+#student .target p{font-size:clamp(28px,5.2vw,58px);font-weight:600;line-height:1.14;letter-spacing:-.012em;text-wrap:balance}
+#student .grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:820px){#student .grid{grid-template-columns:1fr}}
+#student .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+#student .card.tint{background:var(--maroon-tint)}
+#student .stack{display:flex;flex-direction:column;gap:22px}
+#student ul.checks{list-style:none;padding:0;display:flex;flex-direction:column;gap:8px}
+#student .chk{width:100%;display:flex;gap:14px;align-items:flex-start;text-align:left;background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--ink);font-size:clamp(18px,2.2vw,22px);line-height:1.3;min-height:52px}
+#student .chk:hover{border-color:var(--maroon)}
+#student .box{flex:none;width:28px;height:28px;border:3px solid var(--maroon);border-radius:7px;background:#fff;display:grid;place-items:center;margin-top:1px}
+#student .chk[aria-checked="true"]{background:var(--maroon-tint);border-color:var(--maroon)}
+#student .chk[aria-checked="true"] .box{background:var(--maroon)}
+#student .chk[aria-checked="true"] .box::after{content:"";width:8px;height:15px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+#student .progress{margin-top:12px;color:var(--muted);font-size:16px}
+#student .progress.done{color:var(--maroon);font-weight:600}
+#student ul.plain{list-style:none;padding:0}
+#student ul.plain li{position:relative;padding-left:20px;margin-bottom:9px;font-size:clamp(17px,2vw,20px)}
+#student ul.plain li::before{content:"";position:absolute;left:0;top:.5em;width:8px;height:8px;border-radius:50%;background:var(--maroon)}
+#student .terms{display:flex;flex-wrap:wrap;gap:8px}
+#student .terms span{background:#fff;border:2px solid var(--maroon);color:var(--maroon-deep);border-radius:999px;padding:3px 14px;font-weight:500;font-size:clamp(16px,2vw,19px)}
+#student .std{margin-top:22px;color:var(--muted);font-size:15px}
+#student .empty{padding:40px 8px;max-width:36em}
+#student .empty h2{font-size:clamp(24px,4vw,36px);font-weight:600;color:var(--maroon);margin-bottom:10px}
+#student .empty p{color:var(--muted);margin-bottom:18px}
+#student .empty button{background:var(--maroon);color:#fff;border:0;border-radius:10px;padding:12px 20px;font-size:18px}
+#student footer.foot{border-top:1px solid var(--line);padding:12px max(16px,4vw);color:var(--muted);font-size:14px}
+
+/* =================== SETTINGS DIALOG =================== */
+dialog{border:0;border-radius:16px;padding:0;width:min(640px,92vw);max-height:90vh;box-shadow:0 20px 60px rgba(0,0,0,.35);font-family:var(--font);color:var(--ink)}
+dialog::backdrop{background:rgba(30,23,25,.55)}
+dialog form{padding:24px 26px;display:flex;flex-direction:column;gap:14px}
+dialog h3{font-size:22px;color:var(--maroon)}
+dialog h4{font-size:16px;color:var(--maroon);margin-top:4px}
+dialog label{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:15px}
+dialog input[type=text],dialog textarea{font:inherit;padding:9px 11px;border:2px solid var(--line);border-radius:9px;font-weight:400;font-size:14px;width:100%}
+dialog textarea{min-height:70px;resize:vertical}
+dialog .hint{font-size:13px;color:var(--muted);font-weight:400}
+dialog .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+dialog .row button{padding:10px 18px;border-radius:9px;border:2px solid var(--maroon);background:#fff;color:var(--maroon);font-weight:500}
+dialog .row button.primary{background:var(--maroon);color:#fff}
+dialog .linkrow{display:grid;grid-template-columns:7.5em 1fr auto;gap:8px;align-items:center;font-size:14px}
+dialog .linkrow button{padding:7px 12px;border-radius:8px;border:2px solid var(--maroon);background:#fff;color:var(--maroon);font-size:14px}
+@media (prefers-reduced-motion:reduce){#ui{transition:none}}
+</style>
+</head>
+<body>
+
+<!-- ============ Class picker (fallback when a student opens the bare link) ============ -->
+<section id="picker" aria-label="Choose a class">
+  <h1>Which class are you in?</h1>
+  <div class="pick-grid" id="pickGrid"></div>
+</section>
+
+<!-- ============ Teacher board (projector view) ============ -->
+<section id="board">
+  <header class="bar">
+    <div class="logobox" data-logo></div>
+    <div class="bar-class"><h1 id="bClass"></h1><p id="bUnit"></p></div>
+    <div class="bar-date"><div id="bDate"></div></div>
+  </header>
+  <nav class="tabstrip" id="tabstrip" role="tablist" aria-label="Classes by period"></nav>
+  <main id="bMain" aria-live="polite"></main>
+  <footer class="foot">
+    <div class="std" id="bStd"></div>
+    <div class="status" id="bStatus"></div>
+    <div class="spacer"></div>
+  </footer>
+</section>
+
+<!-- ============ Student view ============ -->
+<section id="student">
+  <header class="top">
+    <div class="logobox" data-logo></div>
+    <div><h1 id="sClass"></h1><p id="sToday"></p></div>
+  </header>
+  <main class="wrap" id="sMain" aria-live="polite"></main>
+  <footer class="foot" id="sStatus"></footer>
+</section>
+
+<!-- ============ Teacher controls ============ -->
+<nav id="ui" aria-label="Display controls">
+  <select id="uiTab" aria-label="Class and period"></select>
+  <span class="sep"></span>
+  <button id="uiPrev" title="Previous posted day (←)">◀ Prev</button>
+  <button id="uiToday" title="Jump to today (T)">Today</button>
+  <button id="uiNext" title="Next posted day (→)">Next ▶</button>
+  <span class="sep"></span>
+  <button id="uiRefresh" title="Reload the sheet (R)">Refresh</button>
+  <button id="uiSettings" title="Settings (S)">Settings</button>
+  <button id="uiFull" title="Full screen (F)">Full screen</button>
+</nav>
+
+<dialog id="dlg">
+  <form method="dialog">
+    <h3>Settings</h3>
+    <label>Published Google Sheet CSV link
+      <input type="text" id="sUrl" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
+      <span class="hint">File → Share → Publish to web → CSV. Saved on this device only. For students, paste the same link into SHEET_CSV_URL at the top of the HTML file.</span>
+    </label>
+    <label>Or test with a CSV file
+      <input type="file" id="sFile" accept=".csv,text/csv">
+    </label>
+    <h4>Student links</h4>
+    <div id="linkList"></div>
+    <span class="hint">Give each class its own link. Students see only that class, with no tabs or teacher controls.</span>
+    <div class="row">
+      <button type="button" id="sDemo">Use demo data</button>
+      <button type="button" id="sCancel">Close</button>
+      <button type="button" class="primary" id="sSave">Save and load</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* =====================================================================
+   SETTINGS TO EDIT
+   ===================================================================== */
+const CONFIG = {
+  // Paste your published-sheet CSV link between the quotes. Required for students.
+  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrZNdVL7fkYpz01LTWllFm2J2qOMtlDhMgTULE-ilEDaTWbofSSOoAT4tQlmjjv9N6mqY8sgTDOMAM/pubhtml?gid=48683423&single=true",
+
+  REFRESH_MINUTES: 5,
+
+  // Teacher view opens with ?teacher=KEY. Change the key to any word you like.
+  // (A casual door, not a security lock.)
+  TEACHER_KEY: "1",
+
+  // code = what you type in the Class column and in ?class=CODE
+  CLASSES: [
+    { code: "GA1", name: "Graphic Art 1",    detail: "Photoshop and Illustrator" },
+    { code: "GA2", name: "Graphic Art 2",    detail: "Client projects for the printshop" },
+    { code: "DA1", name: "Digital Art 1",    detail: "Adobe Fresco and Illustrator" },
+    { code: "FS",  name: "Freshman Success", detail: "SEL and touch typing" }
+  ],
+
+  // Student view: how many posted days to show on each side of the selected day
+  DAYS_BEFORE: 5,
+  DAYS_AFTER: 6,
+
+  // Paste your school T-mark SVG markup between the backticks (optional).
+  LOGO_SVG: ``
+};
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const TEACHER = params.get("teacher") === CONFIG.TEACHER_KEY;
+const LS = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const state = {
+  rows: [], mode: "none", updated: null, error: "",
+  view: "picker",          // picker | teacher | student
+  classCode: null, date: null, period: null,
+  tabs: [], sel: null
+};
+
+const pad = n => String(n).padStart(2,"0");
+const isoFromDate = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const dateFromIso = s => { const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); };
+const realToday = () => isoFromDate(new Date());
+const todayIso = () => (TEACHER && params.get("date")) || realToday();
+const fmtLong = iso => dateFromIso(iso).toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+const fmtChip = iso => dateFromIso(iso).toLocaleDateString("en-US",{weekday:"short",month:"numeric",day:"numeric"});
+const fmtTime = d => d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+const fmtShort = d => d.toLocaleDateString("en-US",{month:"numeric",day:"numeric"});
+
+function el(tag,cls,text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function section(title,cls){ const s=el("section",cls); s.appendChild(el("h2","sec",title)); return s; }
+
+function parseDate(v){
+  v=(v||"").trim(); if(!v) return null;
+  let m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return m[1]+"-"+pad(+m[2])+"-"+pad(+m[3]);
+  m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if(m){ let y=+m[3]; if(y<100) y+=2000; return y+"-"+pad(+m[1])+"-"+pad(+m[2]); }
+  const d=new Date(v); return isNaN(d)?null:isoFromDate(d);
+}
+function parseCSV(text){
+  const rows=[]; let row=[], cur="", q=false;
+  text=text.replace(/^\uFEFF/,"");
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else if(c==='"') q=true;
+    else if(c===","){ row.push(cur); cur=""; }
+    else if(c==="\n"||c==="\r"){
+      if(c==="\r"&&text[i+1]==="\n") i++;
+      row.push(cur); cur="";
+      if(row.some(x=>x.trim()!=="")) rows.push(row);
+      row=[];
+    } else cur+=c;
+  }
+  row.push(cur);
+  if(row.some(x=>x.trim()!=="")) rows.push(row);
+  return rows;
+}
+const FIELD_MAP = {
+  date:"date", class:"class", period:"period", unit:"unit",
+  learningtarget:"target", target:"target", objective:"target",
+  successcriteria:"criteria", criteria:"criteria",
+  standard:"standard", standards:"standard",
+  vocabulary:"vocab", vocab:"vocab", agenda:"agenda"
+};
+function rowsFromCSV(text){
+  const t=parseCSV(text); if(t.length<2) return [];
+  const keys=t[0].map(h=>FIELD_MAP[h.toLowerCase().replace(/[^a-z]/g,"")]||null);
+  const out=[];
+  for(const r of t.slice(1)){
+    const o={}; keys.forEach((k,i)=>{ if(k) o[k]=(r[i]||"").trim(); });
+    o.iso=parseDate(o.date);
+    if(o.iso && o.class) out.push(o);
+  }
+  return out;
+}
+function splitList(s,commas){
+  const re=commas?/\n|\||,|;/:/\n|\|/;
+  return (s||"").split(re).map(x=>x.replace(/^[\s\-•*]+/,"").trim()).filter(Boolean);
+}
+const classByCode = code => CONFIG.CLASSES.find(c=>c.code.toLowerCase()===(code||"").toLowerCase());
+const classMatches = (v,c) => { v=v.trim().toLowerCase(); return v===c.code.toLowerCase()||v===c.name.toLowerCase(); };
+const rowsForClass = c => state.rows.filter(r=>classMatches(r.class,c));
+const datesForClass = c => [...new Set(rowsForClass(c).map(r=>r.iso))].sort();
+const periodNum = p => { const n=parseFloat(p); return isNaN(n)?Infinity:n; };
+
+/* =====================================================================
+   DATA
+   ===================================================================== */
+function demoCSV(){
+  const t=todayIso(), q=s=>'"'+s.replace(/"/g,'""')+'"';
+  const rows=[
+    ["GA1","1","Photoshop basics","I can use the Move, Marquee, and Lasso tools to select and move part of an image.","I can name the three selection tools | I can make a selection and move it to a new layer | I can undo a mistake with History","ACPro: Selections","layer | selection | marquee | lasso","Do Now: tool name match | Demo: three selection tools | Practice: cut out a shape | Exit check: save to your folder"],
+    ["GA2","3","Printshop client projects","I can prepare a print-ready file that meets my client's size and color requirements.","I can set up the document at the right size with bleed | I can convert my images to CMYK | I can export a press-ready PDF","Client brief checklist","bleed | CMYK | crop marks | proof","Client check-in | Build and review layout | Preflight in InDesign | Export and submit proof"],
+    ["DA1","2","Drawing in Fresco","I can use layers and brushes in Adobe Fresco to build a simple drawing.","I can add and name at least three layers | I can pick a brush that fits my goal | I can save my work in the right place","Digital art: tools and process","layer | brush | opacity","Sketch warm-up | Brush tour | Work time | Share out"],
+    ["FS","4","Typing and SEL","I can type with correct finger placement and stay focused on my goals for the week.","I can find the home row without looking | I can reach a typing goal I set | I can name one focus strategy","SEL: self-management","home row | posture | goal","Goal check-in | Typing practice | Reflection"]
+  ];
+  return "Date,Class,Period,Unit,Learning Target,Success Criteria,Standard,Vocabulary,Agenda\n"+
+    rows.map(r=>[t,r[0],r[1],r[2],q(r[3]),q(r[4]),r[5],q(r[6]),q(r[7])].join(",")).join("\n");
+}
+async function fetchSheet(url){
+  const res=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const text=await res.text();
+  if(/^\s*<(!doctype|html)/i.test(text)) throw new Error("not a CSV (is the sheet published?)");
+  return text;
+}
+function sheetUrl(){
+  return CONFIG.SHEET_CSV_URL || (TEACHER ? (params.get("sheet")||LS.get("lt_url")||"") : "");
+}
+async function loadData(){
+  state.error="";
+  const url=sheetUrl();
+  if(url){
+    try{
+      const text=await fetchSheet(url);
+      state.rows=rowsFromCSV(text); state.mode="live"; state.updated=new Date();
+      LS.set("lt_cache",text); LS.set("lt_cache_time",String(Date.now()));
+      return;
+    }catch(e){
+      const cached=LS.get("lt_cache");
+      if(cached){ state.rows=rowsFromCSV(cached); state.mode="cached"; state.updated=new Date(+LS.get("lt_cache_time")||Date.now()); return; }
+      state.error=e.message;
+    }
+  } else if(TEACHER && LS.get("lt_file")){
+    state.rows=rowsFromCSV(LS.get("lt_file")); state.mode="file"; state.updated=new Date(); return;
+  }
+  if(TEACHER){ state.rows=rowsFromCSV(demoCSV()); state.mode=state.error?"error":"demo"; }
+  else { state.rows=[]; state.mode="none"; }
+}
+
+/* Student self-checks stay on the student's own device */
+const checks = () => { try{ return JSON.parse(LS.get("lt_checks")||"{}"); }catch(e){ return {}; } };
+const checkKey = (cls,row,i) => [cls.code,row.iso,row.period||"",i].join("|");
+function toggleCheck(key){ const c=checks(); if(c[key]) delete c[key]; else c[key]=1; LS.set("lt_checks",JSON.stringify(c)); }
+
+/* =====================================================================
+   TEACHER TABS: ordered by the Period column
+   ===================================================================== */
+function teacherTabs(dateIso){
+  const tabs=[];
+  CONFIG.CLASSES.forEach((c,ci)=>{
+    const rows=rowsForClass(c);
+    const day=rows.filter(r=>r.iso===dateIso);
+    if(day.length){
+      day.forEach(r=>tabs.push({cls:c,period:r.period||"",row:r,ci}));
+    } else {
+      // Nothing posted that day: place the tab where this class usually sits
+      const dates=[...new Set(rows.map(r=>r.iso))].sort();
+      const near=dates.length ? (dates.filter(d=>d<=dateIso).pop()||dates[0]) : null;
+      const nr=near ? rows.find(r=>r.iso===near) : null;
+      tabs.push({cls:c,period:nr?(nr.period||""):"",row:null,ci});
+    }
+  });
+  tabs.sort((a,b)=> periodNum(a.period)-periodNum(b.period) || a.ci-b.ci);
+  return tabs;
+}
+const tabKey = t => t.cls.code+"|"+t.period;
+const tabLabel = t => (t.period?"Period "+t.period+" – ":"")+t.cls.name;
+
+/* =====================================================================
+   RENDER: dispatcher
+   ===================================================================== */
+function render(){
+  document.body.className = state.view + (document.fullscreenElement?" fs":"");
+  if(state.view==="teacher") renderBoard();
+  else if(state.view==="student") renderStudent();
+  else renderPicker();
+}
+
+function renderPicker(){
+  const g=$("pickGrid"); g.innerHTML="";
+  CONFIG.CLASSES.forEach(c=>{
+    const b=el("button","",c.name);
+    b.onclick=()=>{
+      state.classCode=c.code; state.view="student"; state.date=todayIso(); state.period=null;
+      LS.set("lt_class",c.code);
+      const u=new URL(location.href); u.searchParams.set("class",c.code); history.replaceState(null,"",u);
+      render();
+    };
+    g.appendChild(b);
+  });
+  document.title="Learning targets";
+}
+
+function statusText(){
+  const u=state.updated;
+  switch(state.mode){
+    case "live":   return "Live from your sheet · updated "+fmtTime(u);
+    case "cached": return "Offline copy from "+fmtShort(u)+" "+fmtTime(u);
+    case "file":   return "Loaded from file · "+fmtShort(u);
+    case "error":  return "Couldn't reach the sheet ("+state.error+"). Showing demo data.";
+    case "demo":   return "Demo data. Open Settings to connect your sheet.";
+    default:       return "";
+  }
+}
+
+/* =====================================================================
+   RENDER: teacher board
+   ===================================================================== */
+function renderBoard(){
+  const tabs=teacherTabs(state.date); state.tabs=tabs;
+  let active = tabs.find(t=>state.sel && tabKey(t)===state.sel)
+            || tabs.find(t=>t.cls.code===state.classCode)
+            || tabs[0];
+  state.sel=tabKey(active); state.classCode=active.cls.code;
+  LS.set("lt_sel",state.sel);
+  const cls=active.cls, row=active.row;
+
+  // tab strip + dropdown
+  const strip=$("tabstrip"); strip.innerHTML="";
+  const sel=$("uiTab"); sel.innerHTML="";
+  tabs.forEach(t=>{
+    const b=el("button");
+    b.setAttribute("role","tab"); b.setAttribute("aria-selected", t===active);
+    if(t.period) b.appendChild(el("span","pn",t.period));
+    b.appendChild(el("span","",t.cls.name));
+    b.onclick=()=>selectTab(t);
+    strip.appendChild(b);
+    const o=new Option(tabLabel(t),tabKey(t)); sel.add(o);
+  });
+  sel.value=state.sel;
+  sel.onchange=()=>{ const t=tabs.find(x=>tabKey(x)===sel.value); if(t) selectTab(t); };
+
+  // header
+  $("bClass").textContent=cls.name;
+  $("bUnit").textContent=(row&&row.unit)||cls.detail||"";
+  const bd=$("bDate"); bd.innerHTML=""; bd.append(fmtLong(state.date));
+  const sub=[]; if(active.period) sub.push("Period "+active.period);
+  if(state.date>realToday()) sub.push("Upcoming day"); else if(state.date<realToday()) sub.push("Past day");
+  if(sub.length) bd.appendChild(el("small","",sub.join(" · ")));
+
+  // body
+  const main=$("bMain"); main.innerHTML="";
+  if(!row){
+    const dates=datesForClass(cls);
+    const next=dates.find(d=>d>state.date)||dates.slice().reverse().find(d=>d<state.date);
+    const wrap=el("div","empty"), box=el("div");
+    box.appendChild(el("h2","","Nothing posted for "+fmtLong(state.date)));
+    box.appendChild(el("p","",dates.length
+      ? "Add a row for "+cls.code+" on this date in your sheet, then press Refresh."
+      : "No rows were found for "+cls.code+". Check that the Class column says \""+cls.code+"\" or \""+cls.name+"\"."));
+    if(next){ const b=el("button","","Go to "+fmtLong(next)); b.onclick=()=>{ state.date=next; render(); }; box.appendChild(b); }
+    wrap.appendChild(box); main.style.display="block"; main.style.gridTemplateColumns=""; main.appendChild(wrap);
+    $("bStd").textContent="";
+  } else {
+    main.style.display=""; main.style.gridTemplateColumns="";
+    const left=el("div","col-main"), right=el("div","col-side");
+
+    const tgt=section("Learning target","target");
+    const tb=el("div","target-box"); tb.appendChild(el("p","target-text",row.target||"(No learning target entered)"));
+    tgt.appendChild(tb); left.appendChild(tgt);
+
+    const crit=splitList(row.criteria);
+    if(crit.length){
+      const c=section("Success criteria","criteria"), fb=el("div","fit-box"), ul=el("ul","checks");
+      crit.forEach(x=>ul.appendChild(el("li","",x))); fb.appendChild(ul); c.appendChild(fb); left.appendChild(c);
+    }
+    const ag=splitList(row.agenda);
+    if(ag.length){
+      const a=section("Today","agenda"), fb=el("div","fit-box"), ul=el("ul","plain");
+      ag.forEach(x=>ul.appendChild(el("li","",x))); fb.appendChild(ul); a.appendChild(fb); right.appendChild(a);
+    }
+    const vo=splitList(row.vocab,true);
+    if(vo.length){
+      const v=section("Vocabulary","vocab"), fb=el("div","fit-box"), t=el("div","terms");
+      vo.forEach(x=>t.appendChild(el("span","",x))); fb.appendChild(t); v.appendChild(fb); right.appendChild(v);
+    }
+    main.appendChild(left);
+    if(right.children.length) main.appendChild(right); else main.style.gridTemplateColumns="1fr";
+    $("bStd").textContent=row.standard?"Standard: "+row.standard:"";
+  }
+  $("bStatus").textContent=statusText();
+  document.title=cls.name+" · Learning target";
+  $("uiFull").textContent=document.fullscreenElement?"Exit full screen":"Full screen";
+  requestAnimationFrame(fitAll);
+}
+
+function selectTab(t){ state.sel=tabKey(t); state.classCode=t.cls.code; render(); }
+
+/* shrink text until it fits so long targets never get cut off */
+function fitText(textEl,box,maxPx,minPx){
+  let s=maxPx; textEl.style.fontSize=s+"px";
+  while(s>minPx && (textEl.offsetHeight>box.clientHeight || textEl.scrollWidth>box.clientWidth+1)){ s-=2; textEl.style.fontSize=s+"px"; }
+}
+function fitAll(){
+  if(state.view!=="teacher") return;
+  const vh=innerHeight, vw=innerWidth;
+  const tt=document.querySelector("#board .target-text"), tb=document.querySelector("#board .target-box");
+  if(tt&&tb) fitText(tt,tb,Math.min(vh*0.15,vw*0.075),22);
+  document.querySelectorAll("#board .fit-box").forEach(fb=>{
+    const crit=fb.closest(".criteria");
+    fitText(fb.firstElementChild,fb,crit?Math.min(vh*0.05,vw*0.028):Math.min(vh*0.042,vw*0.024),15);
+  });
+}
+addEventListener("resize",fitAll);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fitAll);
+
+/* =====================================================================
+   RENDER: student view
+   ===================================================================== */
+function renderStudent(){
+  const app=$("sMain"); app.innerHTML="";
+  const cls=classByCode(state.classCode);
+  $("sClass").textContent=cls?cls.name:"Learning targets";
+  $("sToday").textContent=fmtLong(realToday());
+  $("sStatus").textContent = state.mode==="live" ? "Updated "+fmtTime(state.updated)
+    : state.mode==="cached" ? "You're offline. Showing the last saved copy from "+fmtTime(state.updated)+"." : "";
+  document.title=(cls?cls.name+" · ":"")+"Learning target";
+
+  if(state.mode==="none"){
+    const e=el("div","empty");
+    e.appendChild(el("h2","",state.error?"Can't load the targets right now":"This page isn't connected yet"));
+    e.appendChild(el("p","",state.error?"Check your internet connection and try again. If it keeps happening, tell your teacher.":"Tell your teacher the learning target page needs to be set up."));
+    const b=el("button","","Try again"); b.onclick=refresh; e.appendChild(b); app.appendChild(e); return;
+  }
+
+  const dates=datesForClass(cls), today=realToday();
+  if(dates.length){
+    let idx=dates.indexOf(state.date); if(idx<0) idx=dates.filter(d=>d<state.date).length;
+    const lo=Math.max(0,idx-CONFIG.DAYS_BEFORE), hi=Math.min(dates.length,idx+CONFIG.DAYS_AFTER+1);
+    const bar=el("div","daybar");
+    const tb=el("button","today","Today"); tb.setAttribute("aria-pressed",state.date===today);
+    tb.onclick=()=>{ state.date=todayIso(); render(); };
+    bar.appendChild(tb); bar.appendChild(el("span","gap"));
+    dates.slice(lo,hi).forEach(d=>{
+      const b=el("button","",fmtChip(d)+(d===today?" · today":""));
+      b.setAttribute("aria-pressed",d===state.date);
+      b.onclick=()=>{ state.date=d; render(); };
+      bar.appendChild(b);
+    });
+    app.appendChild(bar);
+  }
+
+  const dayRows=rowsForClass(cls).filter(r=>r.iso===state.date)
+    .sort((a,b)=>periodNum(a.period)-periodNum(b.period));
+
+  if(!dayRows.length){
+    const e=el("div","empty");
+    e.appendChild(el("h2","","No target posted for "+fmtLong(state.date)));
+    const prev=dates.filter(d=>d<state.date).pop(), next=dates.find(d=>d>state.date);
+    e.appendChild(el("p","",dates.length?"Nothing is posted for this day yet. You can look at the most recent day instead.":"There are no targets posted for this class yet."));
+    const go=prev||next;
+    if(go){ const b=el("button","","See "+fmtLong(go)); b.onclick=()=>{ state.date=go; render(); }; e.appendChild(b); }
+    app.appendChild(e); return;
+  }
+
+  let row=dayRows[0];
+  if(dayRows.length>1){
+    const want=state.period||params.get("period")||LS.get("lt_period_"+cls.code);
+    row=dayRows.find(r=>r.period===want)||dayRows[0];
+    const p=el("div","periods"); p.appendChild(el("span","","Your period:"));
+    dayRows.forEach(r=>{
+      const b=el("button","",r.period?"Period "+r.period:"Section");
+      b.setAttribute("aria-pressed",r===row);
+      b.onclick=()=>{ state.period=r.period; LS.set("lt_period_"+cls.code,r.period); render(); };
+      p.appendChild(b);
+    });
+    app.appendChild(p);
+  }
+
+  const rel = state.date===today ? "Today's learning target"
+            : state.date<today ? "Learning target from "+fmtLong(state.date)
+            : "Coming up on "+fmtLong(state.date);
+  app.appendChild(el("p","meta",[fmtLong(state.date),row.unit].filter(Boolean).join(" — ")));
+  const ts=section(rel);
+  const tg=el("div","target"); tg.appendChild(el("p","",row.target||"(No learning target entered yet)"));
+  ts.appendChild(tg); app.appendChild(ts);
+
+  const grid=el("div","grid"), left=el("div","stack"), right=el("div","stack");
+
+  const crit=splitList(row.criteria);
+  if(crit.length){
+    const card=el("div","card"); card.appendChild(el("h2","sec","I've got it when I can…"));
+    const ul=el("ul","checks"), saved=checks(), prog=el("p","progress");
+    crit.forEach((text,i)=>{
+      const key=checkKey(cls,row,i), on=!!saved[key];
+      const li=el("li"), b=el("button","chk");
+      b.setAttribute("role","checkbox"); b.setAttribute("aria-checked",on);
+      b.appendChild(el("span","box")); b.appendChild(el("span","",text));
+      b.onclick=()=>{ toggleCheck(key); b.setAttribute("aria-checked",!!checks()[key]); updateProgress(ul,prog,crit.length); };
+      li.appendChild(b); ul.appendChild(li);
+    });
+    card.appendChild(ul); card.appendChild(prog); updateProgress(ul,prog,crit.length); left.appendChild(card);
+  }
+  const ag=splitList(row.agenda);
+  if(ag.length){
+    const card=el("div","card"); card.appendChild(el("h2","sec","What we're doing"));
+    const ul=el("ul","plain"); ag.forEach(x=>ul.appendChild(el("li","",x))); card.appendChild(ul); right.appendChild(card);
+  }
+  const vo=splitList(row.vocab,true);
+  if(vo.length){
+    const card=el("div","card tint"); card.appendChild(el("h2","sec","Words to know"));
+    const t=el("div","terms"); vo.forEach(x=>t.appendChild(el("span","",x))); card.appendChild(t); right.appendChild(card);
+  }
+  if(left.children.length) grid.appendChild(left);
+  if(right.children.length) grid.appendChild(right); else grid.style.gridTemplateColumns="1fr";
+  app.appendChild(grid);
+  if(row.standard) app.appendChild(el("p","std","Standard: "+row.standard));
+}
+function updateProgress(ul,prog,total){
+  const n=ul.querySelectorAll('.chk[aria-checked="true"]').length;
+  prog.textContent = n===total ? "You've checked off every one." : n+" of "+total+" checked. Tap each one when you're sure you can do it.";
+  prog.classList.toggle("done",n===total);
+}
+
+/* =====================================================================
+   TEACHER ACTIONS
+   ===================================================================== */
+function activeClassDates(){ const c=classByCode(state.classCode); return c?datesForClass(c):[]; }
+function step(dir){
+  const dates=activeClassDates();
+  const t=dir>0?dates.find(d=>d>state.date):dates.slice().reverse().find(d=>d<state.date);
+  if(t){ state.date=t; render(); }
+}
+function goToday(){ state.date=todayIso(); render(); }
+async function refresh(){
+  const b=$("uiRefresh"); if(state.view==="teacher") b.textContent="Loading…";
+  await loadData(); b.textContent="Refresh"; render();
+}
+function toggleFull(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(()=>{});
+}
+
+let hideTimer;
+function showUI(){
+  if(state.view!=="teacher") return;
+  $("ui").classList.remove("hide"); clearTimeout(hideTimer);
+  if(document.fullscreenElement && !$("dlg").open) hideTimer=setTimeout(()=>$("ui").classList.add("hide"),3500);
+}
+
+function setupTeacherControls(){
+  ["mousemove","mousedown","touchstart"].forEach(ev=>addEventListener(ev,showUI,{passive:true}));
+  document.addEventListener("fullscreenchange",()=>{ render(); showUI(); setTimeout(fitAll,150); });
+  $("uiPrev").onclick=()=>step(-1);
+  $("uiNext").onclick=()=>step(1);
+  $("uiToday").onclick=goToday;
+  $("uiRefresh").onclick=refresh;
+  $("uiFull").onclick=toggleFull;
+  $("uiSettings").onclick=openSettings;
+
+  addEventListener("keydown",e=>{
+    if($("dlg").open || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const k=e.key.toLowerCase();
+    if(k==="arrowright"||k==="pagedown"){ step(1); e.preventDefault(); }
+    else if(k==="arrowleft"||k==="pageup"){ step(-1); e.preventDefault(); }
+    else if(k==="f") toggleFull();
+    else if(k==="t") goToday();
+    else if(k==="r") refresh();
+    else if(k==="s") openSettings();
+    else if(/^[1-9]$/.test(k)){ const t=state.tabs[+k-1]; if(t) selectTab(t); }
+    showUI();
+  });
+
+  $("sCancel").onclick=()=>$("dlg").close();
+  $("sDemo").onclick=async()=>{ LS.del("lt_url"); LS.del("lt_cache"); LS.del("lt_file"); await loadData(); $("dlg").close(); render(); };
+  $("sSave").onclick=async()=>{
+    const f=$("sFile").files[0], u=$("sUrl").value.trim();
+    if(f){ LS.set("lt_file",await f.text()); LS.del("lt_url"); }
+    else if(u){ LS.set("lt_url",u); LS.del("lt_file"); }
+    await loadData(); $("dlg").close(); render();
+  };
+}
+
+function openSettings(){
+  $("sUrl").value=LS.get("lt_url")||CONFIG.SHEET_CSV_URL||"";
+  $("sFile").value="";
+  const base=location.href.split("#")[0].split("?")[0];
+  const list=$("linkList"); list.innerHTML="";
+  CONFIG.CLASSES.forEach(c=>{
+    const row=el("div","linkrow"), inp=el("input"), btn=el("button","","Copy");
+    inp.type="text"; inp.readOnly=true; inp.value=base+"?class="+c.code;
+    inp.onfocus=()=>inp.select();
+    btn.type="button";
+    btn.onclick=async()=>{
+      try{ await navigator.clipboard.writeText(inp.value); btn.textContent="Copied"; }
+      catch(e){ inp.select(); btn.textContent="Press Ctrl+C"; }
+      setTimeout(()=>btn.textContent="Copy",1800);
+    };
+    row.appendChild(el("span","",c.name)); row.appendChild(inp); row.appendChild(btn);
+    list.appendChild(row);
+  });
+  $("dlg").showModal();
+}
+
+/* =====================================================================
+   START
+   ===================================================================== */
+(async function init(){
+  // logo (used in both views)
+  document.querySelectorAll("[data-logo]").forEach(slot=>{
+    if(CONFIG.LOGO_SVG.trim()){
+      slot.innerHTML=CONFIG.LOGO_SVG;
+      const s=slot.querySelector("svg"); if(s) s.classList.add("logo");
+    } else slot.appendChild(el("div","logo-fallback","T"));
+  });
+
+  await loadData();
+  state.date=todayIso();
+
+  const param=classByCode(params.get("class"));
+  if(TEACHER){
+    state.view="teacher";
+    const saved=LS.get("lt_sel");
+    state.sel = param ? null : saved;
+    state.classCode = param ? param.code : (saved?saved.split("|")[0]:null);
+    setupTeacherControls();
+  } else {
+    const c=param||classByCode(LS.get("lt_class"));
+    if(c){ state.view="student"; state.classCode=c.code; if(params.get("class")) LS.set("lt_class",c.code); }
+    else state.view="picker";
+  }
+  render();
+  showUI();
+
+  setInterval(refresh,CONFIG.REFRESH_MINUTES*60000);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) refresh(); });
+})();
+</script>
+</body>
+</html>
