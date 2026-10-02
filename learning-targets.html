@@ -232,7 +232,7 @@ dialog .linkrow button{padding:7px 12px;border-radius:8px;border:2px solid var(-
    ===================================================================== */
 const CONFIG = {
   // Paste your published-sheet CSV link between the quotes. Required for students.
-  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrZNdVL7fkYpz01LTWllFm2J2qOMtlDhMgTULE-ilEDaTWbofSSOoAT4tQlmjjv9N6mqY8sgTDOMAM/pubhtml?gid=48683423&single=true",
+  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrZNdVL7fkYpz01LTWllFm2J2qOMtlDhMgTULE-ilEDaTWbofSSOoAT4tQlmjjv9N6mqY8sgTDOMAM/pub?gid=48683423&single=true&output=csv",
 
   REFRESH_MINUTES: 5,
 
@@ -356,13 +356,36 @@ function demoCSV(){
   return "Date,Class,Period,Unit,Learning Target,Success Criteria,Standard,Vocabulary,Agenda\n"+
     rows.map(r=>[t,r[0],r[1],r[2],q(r[3]),q(r[4]),r[5],q(r[6]),q(r[7])].join(",")).join("\n");
 }
-async function fetchSheet(url){
-  const res=await fetch(url+(url.includes("?")?"&":"?")+"_="+Date.now(),{cache:"no-store"});
+/* Make sure a published-sheet link asks for CSV, not the web-page version */
+function normalizeUrl(u){
+  u=u.trim();
+  if(/\/spreadsheets\/d\/e\/.+\/pub/.test(u)){
+    if(/output=/i.test(u)) u=u.replace(/output=[a-z]+/i,"output=csv");
+    else u+=(u.includes("?")?"&":"?")+"output=csv";
+  }
+  return u;
+}
+async function tryFetch(url){
+  const res=await fetch(url,{cache:"no-store"});
   if(!res.ok) throw new Error("HTTP "+res.status);
   const text=await res.text();
-  if(/^\s*<(!doctype|html)/i.test(text)) throw new Error("not a CSV (is the sheet published?)");
+  if(/^\s*<(!doctype|html)/i.test(text)) throw new Error("Google sent a web page instead of CSV");
   return text;
 }
+/* Google sometimes hiccups right after publishing, so try up to 3 times */
+async function fetchSheet(url){
+  url=normalizeUrl(url);
+  const bust=u=>u+(u.includes("?")?"&":"?")+"_="+Date.now();
+  let err;
+  for(let i=0;i<3;i++){
+    try{ return await tryFetch(i===1?bust(url):url); }
+    catch(e){ err=e; if(i<2) await new Promise(r=>setTimeout(r,1500)); }
+  }
+  throw err;
+}
+let retryCount=0;
+function scheduleRetry(){ if(retryCount<6){ retryCount++; setTimeout(refresh,20000); } }
+
 function sheetUrl(){
   return CONFIG.SHEET_CSV_URL || (TEACHER ? (params.get("sheet")||LS.get("lt_url")||"") : "");
 }
@@ -374,8 +397,10 @@ async function loadData(){
       const text=await fetchSheet(url);
       state.rows=rowsFromCSV(text); state.mode="live"; state.updated=new Date();
       LS.set("lt_cache",text); LS.set("lt_cache_time",String(Date.now()));
+      retryCount=0;
       return;
     }catch(e){
+      scheduleRetry();
       const cached=LS.get("lt_cache");
       if(cached){ state.rows=rowsFromCSV(cached); state.mode="cached"; state.updated=new Date(+LS.get("lt_cache_time")||Date.now()); return; }
       state.error=e.message;
@@ -432,7 +457,7 @@ function statusText(){
     case "live":   return "Live from your sheet · updated "+fmtTime(u);
     case "cached": return "Offline copy from "+fmtShort(u)+" "+fmtTime(u);
     case "file":   return "Loaded from file · "+fmtShort(u);
-    case "error":  return "Couldn't reach the sheet ("+state.error+"). Showing demo data.";
+    case "error":  return "Couldn't load the sheet ("+state.error+"). Showing demo data. Check that the link ends in output=csv and the sheet is published, then press Refresh.";
     case "demo":   return "Demo data. Open Settings to connect your sheet.";
     default:       return "";
   }
