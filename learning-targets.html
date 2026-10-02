@@ -201,7 +201,7 @@ dialog .linkrow button{padding:7px 12px;border-radius:8px;border:2px solid var(-
 
 <!-- ============ Teacher controls ============ -->
 <nav id="ui" aria-label="Display controls">
-  <select id="uiTab" aria-label="Class and period"></select>
+  <select id="uiTab" aria-label="Class and period" title="Switch class (↑ ↓ or 1–9)"></select>
   <span class="sep"></span>
   <button id="uiPrev" title="Previous posted day (←)">◀ Prev</button>
   <button id="uiToday" title="Jump to today (T)">Today</button>
@@ -498,7 +498,7 @@ function renderBoard(){
     const o=new Option(tabLabel(t),tabKey(t)); sel.add(o);
   });
   sel.value=state.sel;
-  sel.onchange=()=>{ const t=tabs.find(x=>tabKey(x)===sel.value); if(t) selectTab(t); };
+  sel.onchange=()=>{ const t=tabs.find(x=>tabKey(x)===sel.value); sel.blur(); if(t) selectTab(t); };
 
   // header
   $("bClass").textContent=cls.name;
@@ -561,6 +561,11 @@ function renderBoard(){
   requestAnimationFrame(fitAll);
 }
 
+function cycleTab(dir){
+  const tabs=state.tabs; if(tabs.length<2) return;
+  const i=tabs.findIndex(t=>tabKey(t)===state.sel);
+  selectTab(tabs[(i+dir+tabs.length)%tabs.length]);
+}
 function selectTab(t){ state.sel=tabKey(t); state.classCode=t.cls.code; render(); }
 
 /* shrink text until it fits so long targets never get cut off */
@@ -748,6 +753,8 @@ function setupTeacherControls(){
     const k=e.key.toLowerCase();
     if(k==="arrowright"||k==="pagedown"){ step(1); e.preventDefault(); }
     else if(k==="arrowleft"||k==="pageup"){ step(-1); e.preventDefault(); }
+    else if(k==="arrowdown"){ cycleTab(1); e.preventDefault(); }
+    else if(k==="arrowup"){ cycleTab(-1); e.preventDefault(); }
     else if(k==="f") toggleFull();
     else if(k==="t") goToday();
     else if(k==="r") refresh();
