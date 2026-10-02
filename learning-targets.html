@@ -23,22 +23,20 @@ html,body{min-height:100%}
 body{font-family:var(--font);background:var(--paper);color:var(--ink)}
 button{font:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--maroon);outline-offset:2px}
-.logo{height:100%;width:auto;display:block}
+.logo{height:100%;width:auto;aspect-ratio:590/567.57;display:block}
 .logo-fallback{height:100%;aspect-ratio:1;border-radius:12px;background:#fff;color:var(--maroon);display:grid;place-items:center;font-weight:700}
 
 /* Only one view shows at a time */
-#picker,#board,#student{display:none}
-body.picker #picker{display:flex}
+#nolink,#board,#student{display:none}
+body.nolink #nolink{display:flex}
 body.teacher #board{display:flex}
 body.student #student{display:flex}
 body.teacher{overflow:hidden}
 
-/* =================== PICKER =================== */
-#picker{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;gap:4vh;padding:4vh 4vw;background:var(--maroon);color:#fff}
-#picker h1{font-size:clamp(28px,5vw,60px);font-weight:600;letter-spacing:-.01em;text-align:center}
-.pick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;width:min(1000px,100%)}
-.pick-grid button{background:#fff;color:var(--maroon);border:0;border-radius:14px;padding:5vh 24px;font-size:clamp(22px,2.6vw,34px);font-weight:600;text-align:left}
-.pick-grid button:hover{background:var(--maroon-tint)}
+/* =================== NO-LINK MESSAGE =================== */
+#nolink{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;gap:2vh;padding:4vh 6vw;background:var(--maroon);color:#fff;text-align:center}
+#nolink h1{font-size:clamp(26px,4.5vw,52px);font-weight:600;letter-spacing:-.01em}
+#nolink p{font-size:clamp(17px,2.2vw,26px);opacity:.9;max-width:28em}
 
 /* =================== TEACHER BOARD =================== */
 #board{height:100vh;flex-direction:column}
@@ -162,10 +160,10 @@ dialog .linkrow button{padding:7px 12px;border-radius:8px;border:2px solid var(-
 </head>
 <body>
 
-<!-- ============ Class picker (fallback when a student opens the bare link) ============ -->
-<section id="picker" aria-label="Choose a class">
-  <h1>Which class are you in?</h1>
-  <div class="pick-grid" id="pickGrid"></div>
+<!-- ============ Shown if someone opens the bare link ============ -->
+<section id="nolink">
+  <h1>Use your class link</h1>
+  <p>Open the link your teacher shared for your class to see today's learning target.</p>
 </section>
 
 <!-- ============ Teacher board (projector view) ============ -->
@@ -234,7 +232,7 @@ dialog .linkrow button{padding:7px 12px;border-radius:8px;border:2px solid var(-
    ===================================================================== */
 const CONFIG = {
   // Paste your published-sheet CSV link between the quotes. Required for students.
-  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrZNdVL7fkYpz01LTWllFm2J2qOMtlDhMgTULE-ilEDaTWbofSSOoAT4tQlmjjv9N6mqY8sgTDOMAM/pub?gid=48683423&single=true&output=csv",
+  SHEET_CSV_URL: "",
 
   REFRESH_MINUTES: 5,
 
@@ -247,7 +245,7 @@ const CONFIG = {
     { code: "GA1", name: "Graphic Art 1",    detail: "Photoshop and Illustrator" },
     { code: "GA2", name: "Graphic Art 2",    detail: "Client projects for the printshop" },
     { code: "DA1", name: "Digital Art 1",    detail: "Adobe Fresco and Illustrator" },
-    { code: "FrS",  name: "Freshman Success", detail: "SEL and touch typing" }
+    { code: "FrS", name: "Freshman Success", detail: "SEL and touch typing" }
   ],
 
   // Student view: how many posted days to show on each side of the selected day
@@ -255,7 +253,7 @@ const CONFIG = {
   DAYS_AFTER: 6,
 
   // Paste your school T-mark SVG markup between the backticks (optional).
-  LOGO_SVG: ``
+  LOGO_SVG: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 590 567.57"><defs><style>.cls-1{fill:#822336;}.cls-2{fill:#fff;}.cls-3{fill:#d1d3d4;}</style></defs><polygon class="cls-2" points="590 292.25 590 0 0 0 0 292.25 162.97 292.25 162.97 331.22 111.89 331.22 111.89 567.57 478.11 567.57 478.11 331.22 427.03 331.22 427.03 292.25 590 292.25"></polygon><polygon points="565 267.25 565 25 25 25 25 267.25 187.97 267.25 187.97 356.22 136.89 356.22 136.89 542.57 453.11 542.57 453.11 356.22 402.03 356.22 402.03 267.25 565 267.25"></polygon><polygon class="cls-3" points="535.81 239.29 535.81 52.95 54.19 52.95 54.19 239.29 190.41 239.29 190.41 183.39 217.16 183.39 217.16 384.18 166.08 384.18 166.08 514.61 423.92 514.61 423.92 384.18 372.84 384.18 372.84 183.39 399.6 183.39 399.6 239.29 535.81 239.29"></polygon><polygon class="cls-1" points="343.65 155.44 428.78 155.44 428.78 211.34 506.62 211.34 506.62 80.9 83.38 80.9 83.38 211.34 161.22 211.34 161.22 155.44 246.35 155.44 246.35 412.13 195.27 412.13 195.27 486.66 394.73 486.66 394.73 412.13 343.65 412.13 343.65 155.44"></polygon></svg>`
 };
 
 /* =====================================================================
@@ -271,7 +269,7 @@ const LS = {
 };
 const state = {
   rows: [], mode: "none", updated: null, error: "",
-  view: "picker",          // picker | teacher | student
+  view: "nolink",          // nolink | teacher | student
   classCode: null, date: null, period: null,
   tabs: [], sel: null
 };
@@ -425,22 +423,7 @@ function render(){
   document.body.className = state.view + (document.fullscreenElement?" fs":"");
   if(state.view==="teacher") renderBoard();
   else if(state.view==="student") renderStudent();
-  else renderPicker();
-}
-
-function renderPicker(){
-  const g=$("pickGrid"); g.innerHTML="";
-  CONFIG.CLASSES.forEach(c=>{
-    const b=el("button","",c.name);
-    b.onclick=()=>{
-      state.classCode=c.code; state.view="student"; state.date=todayIso(); state.period=null;
-      LS.set("lt_class",c.code);
-      const u=new URL(location.href); u.searchParams.set("class",c.code); history.replaceState(null,"",u);
-      render();
-    };
-    g.appendChild(b);
-  });
-  document.title="Learning targets";
+  else document.title="Learning targets";
 }
 
 function statusText(){
@@ -767,9 +750,8 @@ function openSettings(){
     state.classCode = param ? param.code : (saved?saved.split("|")[0]:null);
     setupTeacherControls();
   } else {
-    const c=param||classByCode(LS.get("lt_class"));
-    if(c){ state.view="student"; state.classCode=c.code; if(params.get("class")) LS.set("lt_class",c.code); }
-    else state.view="picker";
+    if(param){ state.view="student"; state.classCode=param.code; }
+    else state.view="nolink";
   }
   render();
   showUI();
