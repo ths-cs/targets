@@ -158,6 +158,10 @@ a.linkbtn:hover{background:var(--maroon);color:#fff!important}
 #student .linkrow-s{display:flex;flex-wrap:wrap;gap:10px}
 #student a.linkbtn{padding:12px 22px;font-size:clamp(18px,2.2vw,22px);min-height:52px}
 
+#board .terms a.term{background:#fff;border:2px solid var(--maroon);color:var(--maroon-deep);border-radius:999px;padding:.12em .7em;font-weight:500;text-decoration:none}
+#student .terms a.term{background:#fff;border:2px solid var(--maroon);color:var(--maroon-deep);border-radius:999px;padding:3px 14px;font-weight:500;font-size:clamp(16px,2vw,19px);text-decoration:none}
+.terms a.term:hover{background:var(--maroon);color:#fff}
+
 /* =================== SETTINGS DIALOG =================== */
 dialog{border:0;border-radius:16px;padding:0;width:min(640px,92vw);max-height:90vh;box-shadow:0 20px 60px rgba(0,0,0,.35);font-family:var(--font);color:var(--ink)}
 dialog::backdrop{background:rgba(30,23,25,.55)}
@@ -355,6 +359,29 @@ function parseLinks(s){
     if(m) out.push({label:m[1].trim()||hostOf(m[2]),url:m[2]});
   });
   return out;
+}
+
+/* Vocabulary: split on commas / semicolons / | / line breaks, but never inside a link */
+function splitVocab(s){
+  const tokens=[];
+  const safe=(s||"").replace(/\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s<>"]+/g,m=>{
+    let tail=""; const t=m.match(/[.,;:!?]+$/);
+    if(t && !m.startsWith("[")){ tail=t[0]; m=m.slice(0,-tail.length); }
+    tokens.push(m); return "\u0000"+(tokens.length-1)+"\u0000"+tail;
+  });
+  return safe.split(/\n|\||,|;/)
+    .map(x=>x.replace(/\u0000(\d+)\u0000/g,(_,i)=>tokens[+i]).replace(/^[\s\-•*]+/,"").trim())
+    .filter(Boolean);
+}
+/* One vocabulary chip: plain word, or a clickable chip if it carries a link */
+function vocabTerm(text){
+  let m=text.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+  if(!m && !/\]\(/.test(text)){
+    const m2=text.match(/^(.*?)[\s:\-–—]*(https?:\/\/\S+)$/i);
+    if(m2){ const u=m2[2].replace(/[.,;:!?]+$/,""); m=[null,m2[1].trim()||hostOf(u),u]; }
+  }
+  if(m) return mkLink(m[1]+" ↗",m[2],"term");
+  return richEl("span","",text);
 }
 
 function parseDate(v){
@@ -620,10 +647,10 @@ function renderBoard(){
       const a=section("Today","agenda"), fb=el("div","fit-box"), ul=el("ul","plain");
       ag.forEach(x=>ul.appendChild(richEl("li","",x))); fb.appendChild(ul); a.appendChild(fb); right.appendChild(a);
     }
-    const vo=splitList(row.vocab,true);
+    const vo=splitVocab(row.vocab);
     if(vo.length){
       const v=section("Vocabulary","vocab"), fb=el("div","fit-box"), t=el("div","terms");
-      vo.forEach(x=>t.appendChild(el("span","",x))); fb.appendChild(t); v.appendChild(fb); right.appendChild(v);
+      vo.forEach(x=>t.appendChild(vocabTerm(x))); fb.appendChild(t); v.appendChild(fb); right.appendChild(v);
     }
     main.appendChild(left);
     if(right.children.length) main.appendChild(right); else main.style.gridTemplateColumns="1fr";
@@ -778,10 +805,10 @@ function renderStudent(){
     const card=el("div","card"); card.appendChild(el("h2","sec","What we're doing"));
     const ul=el("ul","plain"); ag.forEach(x=>ul.appendChild(richEl("li","",x))); card.appendChild(ul); right.appendChild(card);
   }
-  const vo=splitList(row.vocab,true);
+  const vo=splitVocab(row.vocab);
   if(vo.length){
     const card=el("div","card tint"); card.appendChild(el("h2","sec","Words to know"));
-    const t=el("div","terms"); vo.forEach(x=>t.appendChild(el("span","",x))); card.appendChild(t); right.appendChild(card);
+    const t=el("div","terms"); vo.forEach(x=>t.appendChild(vocabTerm(x))); card.appendChild(t); right.appendChild(card);
   }
   if(left.children.length) grid.appendChild(left);
   if(right.children.length) grid.appendChild(right); else grid.style.gridTemplateColumns="1fr";
