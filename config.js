@@ -8,7 +8,7 @@ window.LT_CONFIG = {
 
   // 1) REQUIRED: your published Google Sheet CSV link (between the quotes).
   //    Google Sheets: File > Share > Publish to web > pick the tab > CSV > Publish.
-  SHEET_CSV_URL: "",
+  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrZNdVL7fkYpz01LTWllFm2J2qOMtlDhMgTULE-ilEDaTWbofSSOoAT4tQlmjjv9N6mqY8sgTDOMAM/pub?gid=48683423&single=true&output=csv",
 
   // 2) The word that opens teacher mode: learning-targets.html?teacher=1
   //    Change "1" to any word you like (a casual door, not a security lock).
