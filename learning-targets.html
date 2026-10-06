@@ -244,13 +244,15 @@ dialog .linkrow button{padding:7px 12px;border-radius:8px;border:2px solid var(-
   </form>
 </dialog>
 
+<script src="config.js"></script>
 <script>
 /* =====================================================================
    SETTINGS TO EDIT
    ===================================================================== */
 const CONFIG = {
-  // Paste your published-sheet CSV link between the quotes. Required for students.
-  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrZNdVL7fkYpz01LTWllFm2J2qOMtlDhMgTULE-ilEDaTWbofSSOoAT4tQlmjjv9N6mqY8sgTDOMAM/pub?gid=48683423&single=true&output=csv",
+  // Easiest: set your sheet link in config.js so updates to this file never erase it.
+  // (You can also paste it here between the quotes.)
+  SHEET_CSV_URL: "",
 
   REFRESH_MINUTES: 5,
 
@@ -279,6 +281,12 @@ const CONFIG = {
   // Paste your school T-mark SVG markup between the backticks (optional).
   LOGO_SVG: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 590 567.57"><defs><style>.cls-1{fill:#822336;}.cls-2{fill:#fff;}.cls-3{fill:#d1d3d4;}</style></defs><polygon class="cls-2" points="590 292.25 590 0 0 0 0 292.25 162.97 292.25 162.97 331.22 111.89 331.22 111.89 567.57 478.11 567.57 478.11 331.22 427.03 331.22 427.03 292.25 590 292.25"></polygon><polygon points="565 267.25 565 25 25 25 25 267.25 187.97 267.25 187.97 356.22 136.89 356.22 136.89 542.57 453.11 542.57 453.11 356.22 402.03 356.22 402.03 267.25 565 267.25"></polygon><polygon class="cls-3" points="535.81 239.29 535.81 52.95 54.19 52.95 54.19 239.29 190.41 239.29 190.41 183.39 217.16 183.39 217.16 384.18 166.08 384.18 166.08 514.61 423.92 514.61 423.92 384.18 372.84 384.18 372.84 183.39 399.6 183.39 399.6 239.29 535.81 239.29"></polygon><polygon class="cls-1" points="343.65 155.44 428.78 155.44 428.78 211.34 506.62 211.34 506.62 80.9 83.38 80.9 83.38 211.34 161.22 211.34 161.22 155.44 246.35 155.44 246.35 412.13 195.27 412.13 195.27 486.66 394.73 486.66 394.73 412.13 343.65 412.13 343.65 155.44"></polygon></svg>`
 };
+
+/* Anything set in config.js (your sheet link, class list, etc.) overrides the defaults above.
+   Empty values in config.js are ignored, so a link pasted straight into this file still works. */
+if(window.LT_CONFIG){
+  Object.keys(window.LT_CONFIG).forEach(k=>{ const v=window.LT_CONFIG[k]; if(v!==""&&v!=null) CONFIG[k]=v; });
+}
 
 /* =====================================================================
    HELPERS
