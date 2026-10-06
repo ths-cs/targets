@@ -147,6 +147,17 @@ body.teacher #ui{display:flex}
 #student .empty button{background:var(--maroon);color:#fff;border:0;border-radius:10px;padding:12px 20px;font-size:18px}
 #student footer.foot{border-top:1px solid var(--line);padding:12px max(16px,4vw);color:var(--muted);font-size:14px}
 
+/* =================== LINKS =================== */
+#board a,#student a{color:inherit;text-decoration:underline;text-underline-offset:.16em;text-decoration-thickness:.08em}
+#board .spot a,#student .spot a{color:#fff}
+a.linkbtn{display:inline-flex;align-items:center;gap:.4em;text-decoration:none!important;background:#fff;color:var(--maroon)!important;border:3px solid var(--maroon);border-radius:999px;font-weight:600}
+a.linkbtn:hover{background:var(--maroon);color:#fff!important}
+#board .linkrow-b{flex:none;display:flex;flex-wrap:wrap;gap:1vh 1vw;max-height:12vh;overflow:hidden}
+#board a.linkbtn{padding:.7vh 1.4vw;font-size:clamp(14px,2.6vh,28px)}
+#student .linksec{margin:0 0 22px}
+#student .linkrow-s{display:flex;flex-wrap:wrap;gap:10px}
+#student a.linkbtn{padding:12px 22px;font-size:clamp(18px,2.2vw,22px);min-height:52px}
+
 /* =================== SETTINGS DIALOG =================== */
 dialog{border:0;border-radius:16px;padding:0;width:min(640px,92vw);max-height:90vh;box-shadow:0 20px 60px rgba(0,0,0,.35);font-family:var(--font);color:var(--ink)}
 dialog::backdrop{background:rgba(30,23,25,.55)}
@@ -239,9 +250,14 @@ dialog .linkrow button{padding:7px 12px;border-radius:8px;border:2px solid var(-
    ===================================================================== */
 const CONFIG = {
   // Paste your published-sheet CSV link between the quotes. Required for students.
-  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrZNdVL7fkYpz01LTWllFm2J2qOMtlDhMgTULE-ilEDaTWbofSSOoAT4tQlmjjv9N6mqY8sgTDOMAM/pub?gid=48683423&single=true&output=csv",
+  SHEET_CSV_URL: "",
 
   REFRESH_MINUTES: 5,
+
+  // For Google Sites (or any embed where you can't add ?class=CODE to the address):
+  // put a class code here, e.g. "GA1", and this copy of the file always shows that
+  // class. Leave it empty ("") when you use ?class=CODE links instead.
+  LOCK_CLASS: (window.LT_CLASS || ""),
 
   // Teacher view opens with ?teacher=KEY. Change the key to any word you like.
   // (A casual door, not a security lock.)
@@ -295,6 +311,44 @@ const fmtShort = d => d.toLocaleDateString("en-US",{month:"numeric",day:"numeric
 function el(tag,cls,text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
 function section(title,cls){ const s=el("section",cls); s.appendChild(el("h2","sec",title)); return s; }
 
+/* ---------- links: [label](https://...), bare URLs, and the Links column ---------- */
+const RICH_RE=/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>"]+)/gi;
+function mkLink(label,url,cls){
+  const a=document.createElement("a");
+  a.href=url; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=label;
+  if(cls) a.className=cls; return a;
+}
+function hostOf(url){ try{ return new URL(url).hostname.replace(/^www\./,""); }catch(e){ return url; } }
+function addRich(parent,text){
+  let last=0, m; RICH_RE.lastIndex=0;
+  while((m=RICH_RE.exec(text))){
+    if(m.index>last) parent.appendChild(document.createTextNode(text.slice(last,m.index)));
+    if(m[1]){ parent.appendChild(mkLink(m[1],m[2])); }
+    else{
+      let url=m[3], tail="";
+      const t=url.match(/[.,;:!?)]+$/); if(t){ tail=t[0]; url=url.slice(0,-tail.length); }
+      parent.appendChild(mkLink(hostOf(url),url));
+      if(tail) parent.appendChild(document.createTextNode(tail));
+    }
+    last=m.index+m[0].length;
+  }
+  if(last<text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+}
+function richEl(tag,cls,text){ const e=el(tag,cls); addRich(e,text); return e; }
+/* plain text version (used inside checkboxes, which can't hold links) */
+const plainLabel = t => t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,"$1");
+/* Links column -> [{label,url}] */
+function parseLinks(s){
+  const out=[];
+  splitList(s).forEach(item=>{
+    let m=item.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+    if(m){ out.push({label:m[1],url:m[2]}); return; }
+    m=item.match(/^(.*?)[\s:\-–—]*(https?:\/\/\S+)$/i);
+    if(m) out.push({label:m[1].trim()||hostOf(m[2]),url:m[2]});
+  });
+  return out;
+}
+
 function parseDate(v){
   v=(v||"").trim(); if(!v) return null;
   let m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
@@ -328,7 +382,8 @@ const FIELD_MAP = {
   successcriteria:"criteria", criteria:"criteria",
   standard:"standard", standards:"standard",
   vocabulary:"vocab", vocab:"vocab", agenda:"agenda",
-  spotlight:"spotlight"
+  spotlight:"spotlight",
+  links:"links", link:"links"
 };
 function rowsFromCSV(text){
   const t=parseCSV(text); if(t.length<2) return [];
@@ -423,7 +478,11 @@ async function loadData(){
 }
 
 /* Student self-checks stay on the student's own device */
-const checks = () => { try{ return JSON.parse(LS.get("lt_checks")||"{}"); }catch(e){ return {}; } };
+let memChecks=null;   // kept in memory too, so ticks still work if the embed blocks saving
+function checks(){
+  if(memChecks===null){ try{ memChecks=JSON.parse(LS.get("lt_checks")||"{}"); }catch(e){ memChecks={}; } }
+  return memChecks;
+}
 const checkKey = (cls,row,i) => [cls.code,row.iso,row.period||"",i].join("|");
 function toggleCheck(key){ const c=checks(); if(c[key]) delete c[key]; else c[key]=1; LS.set("lt_checks",JSON.stringify(c)); }
 
@@ -526,25 +585,32 @@ function renderBoard(){
     const left=el("div","col-main"), right=el("div","col-side");
 
     const tgt=section("Learning target","target");
-    const tb=el("div","target-box"); tb.appendChild(el("p","target-text",row.target||"(No learning target entered)"));
+    const tb=el("div","target-box"); tb.appendChild(richEl("p","target-text",row.target||"(No learning target entered)"));
     tgt.appendChild(tb); left.appendChild(tgt);
 
     const spot=splitList(row.spotlight);
     if(spot.length){
       const sp=el("section","spot"); sp.appendChild(el("h2","","Spotlight"));
-      const sb=el("div","spot-body"); spot.forEach(x=>sb.appendChild(el("p","",x)));
+      const sb=el("div","spot-body"); spot.forEach(x=>sb.appendChild(richEl("p","",x)));
       sp.appendChild(sb); left.appendChild(sp);
+    }
+
+    const lk=parseLinks(row.links);
+    if(lk.length){
+      const lr=el("div","linkrow-b");
+      lk.forEach(l=>lr.appendChild(mkLink(l.label+" ↗",l.url,"linkbtn")));
+      left.appendChild(lr);
     }
 
     const crit=splitList(row.criteria);
     if(crit.length){
       const c=section("Success criteria","criteria"), fb=el("div","fit-box"), ul=el("ul","checks");
-      crit.forEach(x=>ul.appendChild(el("li","",x))); fb.appendChild(ul); c.appendChild(fb); left.appendChild(c);
+      crit.forEach(x=>ul.appendChild(richEl("li","",x))); fb.appendChild(ul); c.appendChild(fb); left.appendChild(c);
     }
     const ag=splitList(row.agenda);
     if(ag.length){
       const a=section("Today","agenda"), fb=el("div","fit-box"), ul=el("ul","plain");
-      ag.forEach(x=>ul.appendChild(el("li","",x))); fb.appendChild(ul); a.appendChild(fb); right.appendChild(a);
+      ag.forEach(x=>ul.appendChild(richEl("li","",x))); fb.appendChild(ul); a.appendChild(fb); right.appendChild(a);
     }
     const vo=splitList(row.vocab,true);
     if(vo.length){
@@ -666,13 +732,21 @@ function renderStudent(){
             : "Coming up on "+fmtLong(state.date);
   app.appendChild(el("p","meta",[fmtLong(state.date),row.unit].filter(Boolean).join(" — ")));
   const ts=section(rel);
-  const tg=el("div","target"); tg.appendChild(el("p","",row.target||"(No learning target entered yet)"));
+  const tg=el("div","target"); tg.appendChild(richEl("p","",row.target||"(No learning target entered yet)"));
   ts.appendChild(tg); app.appendChild(ts);
 
   const spot=splitList(row.spotlight);
   if(spot.length){
     const sp=el("section","spot"); sp.appendChild(el("h2","","Spotlight"));
-    spot.forEach(x=>sp.appendChild(el("p","",x))); app.appendChild(sp);
+    spot.forEach(x=>sp.appendChild(richEl("p","",x))); app.appendChild(sp);
+  }
+
+  const lk=parseLinks(row.links);
+  if(lk.length){
+    const ls=el("section","linksec"); ls.appendChild(el("h2","sec","Links for today"));
+    const lr=el("div","linkrow-s");
+    lk.forEach(l=>lr.appendChild(mkLink(l.label+" ↗",l.url,"linkbtn")));
+    ls.appendChild(lr); app.appendChild(ls);
   }
 
   const grid=el("div","grid"), left=el("div","stack"), right=el("div","stack");
@@ -685,7 +759,7 @@ function renderStudent(){
       const key=checkKey(cls,row,i), on=!!saved[key];
       const li=el("li"), b=el("button","chk");
       b.setAttribute("role","checkbox"); b.setAttribute("aria-checked",on);
-      b.appendChild(el("span","box")); b.appendChild(el("span","",text));
+      b.appendChild(el("span","box")); b.appendChild(el("span","",plainLabel(text)));
       b.onclick=()=>{ toggleCheck(key); b.setAttribute("aria-checked",!!checks()[key]); updateProgress(ul,prog,crit.length); };
       li.appendChild(b); ul.appendChild(li);
     });
@@ -694,7 +768,7 @@ function renderStudent(){
   const ag=splitList(row.agenda);
   if(ag.length){
     const card=el("div","card"); card.appendChild(el("h2","sec","What we're doing"));
-    const ul=el("ul","plain"); ag.forEach(x=>ul.appendChild(el("li","",x))); card.appendChild(ul); right.appendChild(card);
+    const ul=el("ul","plain"); ag.forEach(x=>ul.appendChild(richEl("li","",x))); card.appendChild(ul); right.appendChild(card);
   }
   const vo=splitList(row.vocab,true);
   if(vo.length){
@@ -810,6 +884,7 @@ function openSettings(){
   state.date=todayIso();
 
   const param=classByCode(params.get("class"));
+  const locked=classByCode(CONFIG.LOCK_CLASS);
   if(TEACHER){
     state.view="teacher";
     const saved=LS.get("lt_sel");
@@ -817,7 +892,8 @@ function openSettings(){
     state.classCode = param ? param.code : (saved?saved.split("|")[0]:null);
     setupTeacherControls();
   } else {
-    if(param){ state.view="student"; state.classCode=param.code; }
+    const pick=locked||param;
+    if(pick){ state.view="student"; state.classCode=pick.code; }
     else state.view="nolink";
   }
   render();
